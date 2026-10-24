@@ -1,5 +1,5 @@
 import '../models/consultation.dart';
-import '../services/consultation_service.dart';
+import '../services/appointment_service.dart';
 
 class ConsultationRepository {
   ConsultationRepository({

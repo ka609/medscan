@@ -1,5 +1,5 @@
 import '../models/imaging_study.dart';
-import '../services/imaging_service.dart';
+import '../services/examination_service.dart';
 
 class ImagingRepository {
   ImagingRepository({ImagingService? service})

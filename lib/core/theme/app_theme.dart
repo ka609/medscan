@@ -6,6 +6,11 @@ import 'app_text_styles.dart';
 class AppTheme {
   AppTheme._();
 
+  // Rayons de bordure réutilisables
+  static final BorderRadius borderRadiusSmall = BorderRadius.circular(8);
+  static final BorderRadius borderRadiusMedium = BorderRadius.circular(12);
+  static final BorderRadius borderRadiusLarge = BorderRadius.circular(16);
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -53,7 +58,7 @@ class AppTheme {
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: borderRadiusLarge,
           side: const BorderSide(color: AppColors.border),
         ),
       ),
@@ -66,15 +71,15 @@ class AppTheme {
           vertical: 14,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: borderRadiusMedium,
           borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: borderRadiusMedium,
           borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: borderRadiusMedium,
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
       ),

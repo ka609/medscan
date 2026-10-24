@@ -11,6 +11,11 @@ class AppColors {
   static const Color primaryGradientStart = Color(0xFF1B5FE0);
   static const Color primaryGradientEnd = Color(0xFF3E7BFF);
 
+  // Surfaces (sur le thème du primary — équivalents ColorScheme)
+  static const Color primaryContainer = Color(0xFFEAF1FF);
+  static const Color onPrimaryContainer = Color(0xFF1B5FE0);
+  static const Color outlineVariant = Color(0xFFE7ECF3);
+
   // Fonds
   static const Color background = Color(0xFFF6F8FC);
   static const Color surface = Colors.white;
@@ -29,4 +34,8 @@ class AppColors {
   // Bordures / divers
   static const Color border = Color(0xFFE7ECF3);
   static const Color star = Color(0xFFF5A524);
+
+  // Ombres
+  static const Color shadow = Color(0x14000000); // noir à 8%
+  static const Color shadowLight = Color(0x0A000000); // noir à 4%
 }

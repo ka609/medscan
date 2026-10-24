@@ -7,8 +7,10 @@ import '../../features/auth/screens/otp_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/home/screens/main_screen.dart';
-import '../../features/medical_record/screens/medical_record_screen.dart';
+import '../../features/medical/screens/medical_record_screen.dart';
 import '../../features/profil/screens/profile_screen.dart';
+import '../../features/medical/screens/prescription_screen.dart';
+import '../../features/appointments/screens/appointments_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -24,6 +26,8 @@ class AppRoutes {
   static const String home = '/home';
   static const String profile = '/profile';
   static const String medicalRecord = '/medical-record';
+  static const String prescriptions = '/prescriptions';
+  static const String appointments = '/appointments';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -103,6 +107,18 @@ final GoRouter appRouter = GoRouter(
         return const MedicalRecordScreen();
       },
     ),
+
+    GoRoute(
+      path: AppRoutes.prescriptions,
+      builder: (context, state) => const PrescriptionScreen(),
+    ),
+
+    GoRoute(
+  path: AppRoutes.appointments,
+  builder: (context, state) {
+    return const AppointmentsScreen();
+  },
+),
   ],
 
   errorBuilder: (context, state) {

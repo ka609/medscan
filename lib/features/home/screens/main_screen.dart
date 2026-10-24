@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import 'home_screen.dart';
+import '../../profil/screens/profile_screen.dart';
+import '../../appointments/screens/appointments_screen.dart';
 
-// Écran principal avec navigation par onglets.
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -11,19 +14,15 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  static const Color _primary = Color(0xFF1565C0);
-  static const Color _textMuted = Color(0xFF6B7280);
-
   int _currentIndex = 0;
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    _PlaceholderScreen(title: 'Rendez-vous'),
+    AppointmentsScreen(),
     _PlaceholderScreen(title: 'Messages'),
-    _PlaceholderScreen(title: 'Profil'),
+    ProfileScreen(),
   ];
 
-  // Change d'onglet.
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -33,89 +32,159 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 12,
-              offset: Offset(0, -2),
-            ),
-          ],
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          12,
         ),
-        child: SafeArea(
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: _onTabTapped,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
-            selectedItemColor: _primary,
-            unselectedItemColor: _textMuted,
-            showUnselectedLabels: true,
-            selectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-            ),
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Accueil',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_month_outlined),
-                activeIcon: Icon(Icons.calendar_month),
-                label: 'Rendez-vous',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.message_outlined),
-                activeIcon: Icon(Icons.message),
-                label: 'Messages',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Profil',
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 20,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: _onTabTapped,
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: AppColors.surface,
+              elevation: 0,
+
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textSecondary,
+
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+
+              selectedLabelStyle:
+                  AppTextStyles.bodySmall.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+
+              unselectedLabelStyle:
+                  AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+
+              items: [
+                _buildNavigationItem(
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home_rounded,
+                  label: 'Accueil',
+                  index: 0,
+                ),
+                _buildNavigationItem(
+                  icon: Icons.calendar_month_outlined,
+                  activeIcon: Icons.calendar_month_rounded,
+                  label: 'Rendez-vous',
+                  index: 1,
+                ),
+                _buildNavigationItem(
+                  icon: Icons.message_outlined,
+                  activeIcon: Icons.message_rounded,
+                  label: 'Messages',
+                  index: 2,
+                ),
+                _buildNavigationItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person_rounded,
+                  label: 'Profil',
+                  index: 3,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  BottomNavigationBarItem _buildNavigationItem({
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _currentIndex == index;
+
+    return BottomNavigationBarItem(
+      icon: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 5,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.10)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(
+          icon,
+          size: 23,
+        ),
+      ),
+      activeIcon: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 5,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(
+          activeIcon,
+          size: 23,
+        ),
+      ),
+      label: label,
+    );
+  }
 }
 
-// Écran temporaire.
 class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title});
+  const _PlaceholderScreen({
+    required this.title,
+  });
 
   final String title;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: _MainScreenState._primary,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
         title: Text(title),
       ),
       body: Center(
         child: Text(
           'Écran "$title" à venir',
-          style: const TextStyle(
-            fontSize: 15,
-            color: _MainScreenState._textMuted,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
           ),
         ),
       ),

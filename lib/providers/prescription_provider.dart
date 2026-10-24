@@ -20,37 +20,7 @@ class PrescriptionProvider extends ChangeNotifier {
 
   String? get error => _error;
 
-  Future<bool> createPrescription({
-    required String patientId,
-    required String medicationName,
-    required String dosage,
-    required String frequency,
-    required int durationDays,
-    required String instructions,
-  }) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      _prescription = await _repository.createPrescription(
-        patientId: patientId,
-        medicationName: medicationName,
-        dosage: dosage,
-        frequency: frequency,
-        durationDays: durationDays,
-        instructions: instructions,
-      );
-
-      return true;
-    } catch (e) {
-      _error = e.toString();
-
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
+  // Consulter une prescription
   Future<bool> getPrescription(String code) async {
     _setLoading(true);
     _clearError();
@@ -61,35 +31,19 @@ class PrescriptionProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _error = e.toString();
-
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<bool> dispensePrescription(String code) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      _prescription = await _repository.dispensePrescription(code);
-
-      return true;
-    } catch (e) {
-      _error = e.toString();
-
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
+  // Vider les données
   void clearData() {
     _prescription = null;
     notifyListeners();
   }
 
+  // Effacer l'erreur
   void clearError() {
     _clearError();
     notifyListeners();
