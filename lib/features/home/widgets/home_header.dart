@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({
@@ -25,177 +24,101 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primaryGradientStart,
-            AppColors.primaryGradientEnd,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.primary,
         borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(32),
+          bottom: Radius.circular(30),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Avatar
-              GestureDetector(
-                onTap: onProfileTap,
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            // Avatar
+            GestureDetector(
+              onTap: onProfileTap,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    width: 2,
                   ),
-                  child: Center(
-                    child: Text(
-                      _getInitials(name),
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 14),
-
-              // Informations utilisateur
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bonjour,',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontWeight: FontWeight.w400,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.userName.copyWith(
-                        fontSize: 19,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    if (userRole != null && userRole!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.20),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          userRole!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
+                child: Center(
+                  child: Text(
+                    _getInitials(name),
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
               ),
+            ),
 
-              // Boutons d'action modernes
-              Row(
+            const SizedBox(width: 14),
+
+            // Salutations
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _HeaderIconButton(
-                    icon: Icons.search_rounded,
-                    tooltip: 'Recherche',
-                    onTap: onSearchTap,
-                  ),
-                  const SizedBox(width: 8),
-                  _HeaderNotificationButton(
-                    count: notificationCount,
-                    onTap: onNotificationTap,
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Barre de recherche intégrée moderne
-          InkWell(
-            onTap: onSearchTap,
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x140F172A),
-                    blurRadius: 14,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.search_rounded,
-                    color: AppColors.primary,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Rechercher un médecin, hôpital, analyse...',
-                      style: AppTextStyles.bodyRegular.copyWith(
-                        color: AppColors.textMuted,
-                        fontSize: 13.5,
-                      ),
+                  Text(
+                    'Bonjour, $name',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white.withValues(alpha: 0.85),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.tune_rounded,
-                      color: AppColors.primary,
-                      size: 16,
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Bienvenue sur MedScan',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: -0.3,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+
+            // Boutons d'action (Recherche & Cloche)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _HeaderIconButton(
+                  icon: Icons.search_rounded,
+                  tooltip: 'Recherche',
+                  onTap: onSearchTap,
+                ),
+                const SizedBox(width: 8),
+                _HeaderNotificationButton(
+                  count: notificationCount,
+                  onTap: onNotificationTap,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -229,7 +152,7 @@ class _HeaderIconButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(9),
           child: Icon(icon, color: Colors.white, size: 21),
         ),
       ),
@@ -258,7 +181,7 @@ class _HeaderNotificationButton extends StatelessWidget {
             customBorder: const CircleBorder(),
             onTap: onTap,
             child: const Padding(
-              padding: EdgeInsets.all(10),
+              padding: EdgeInsets.all(9),
               child: Icon(
                 Icons.notifications_none_rounded,
                 color: Colors.white,
@@ -272,19 +195,19 @@ class _HeaderNotificationButton extends StatelessWidget {
             right: 0,
             top: 0,
             child: Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: AppColors.accentRed,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
               ),
-              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               child: Center(
                 child: Text(
                   count > 9 ? '9+' : '$count',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 9.5,
+                    fontSize: 9,
                     fontWeight: FontWeight.w700,
                     height: 1,
                   ),

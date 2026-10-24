@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 
 class ServiceItemData {
   const ServiceItemData({
@@ -37,7 +36,7 @@ class ServiceItem extends StatelessWidget {
         onTap: item.onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -46,36 +45,32 @@ class ServiceItem extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Container(
-                    width: 58,
-                    height: 58,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
                       color: item.backgroundColor,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: AppColors.primaryLight.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
                       child: Icon(
                         item.icon,
                         color: item.color,
-                        size: 28,
+                        size: 26,
                       ),
                     ),
                   ),
                   if (item.badgeText != null)
                     Positioned(
-                      top: -4,
-                      right: -6,
+                      top: -3,
+                      right: -5,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
+                          horizontal: 5,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.primary.withValues(alpha: 0.3),
@@ -88,7 +83,7 @@ class ServiceItem extends StatelessWidget {
                           item.badgeText!,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 9,
+                            fontSize: 8.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -102,10 +97,10 @@ class ServiceItem extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodySmall.copyWith(
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
-                  fontSize: 12.5,
+                  fontSize: 12,
                   letterSpacing: -0.2,
                 ),
               ),

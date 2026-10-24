@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-  void _showFeatureNotice(String title, String description) {
+  void _showNotice(String title, String description) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -139,259 +139,250 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. En-tête bleu avec avatar, salutations et recherche
-              HomeHeader(
-                name: userName,
-                userRole: userRole,
-                notificationCount: 2,
-                onProfileTap: () {
-                  context.push(AppRoutes.profile);
-                },
-                onSearchTap: () {
-                  _showFeatureNotice(
-                    'Recherche Rapide',
-                    'Recherchez des médecins par spécialité, des hôpitaux partenaires ou des types d\'actes médicaux.',
-                  );
-                },
-                onNotificationTap: () {
-                  _showFeatureNotice(
-                    'Notifications & Alertes',
-                    'Consultez vos rappels de rendez-vous, alertes de résultats de laboratoire et confirmations médicales.',
-                  );
-                },
-              ),
-
-              // 2. Grille des 6 services clés inspirée du template
-              Transform.translate(
-                offset: const Offset(0, -22),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ServicesCard(
-                    services: [
-                      ServiceItemData(
-                        icon: Icons.monitor_weight_outlined,
-                        title: 'Consultation & IMC',
-                        badgeText: 'Live',
-                        color: AppColors.primary,
-                        backgroundColor: AppColors.softBlue,
-                        onTap: () {
-                          context.push(AppRoutes.medicalRecord);
-                        },
-                      ),
-                      ServiceItemData(
-                        icon: Icons.calendar_month_outlined,
-                        title: 'Rendez-vous',
-                        color: AppColors.primary,
-                        backgroundColor: AppColors.softBlue,
-                        onTap: () {
-                          context.push(AppRoutes.appointments);
-                        },
-                      ),
-                      ServiceItemData(
-                        icon: Icons.video_camera_front_outlined,
-                        title: 'Téléconsultation',
-                        badgeText: 'Jitsi',
-                        color: AppColors.accentGreen,
-                        backgroundColor: AppColors.softGreen,
-                        onTap: () {
-                          _showFeatureNotice(
-                            'Téléconsultation Jitsi Meet',
-                            'Rejoignez votre consultation vidéo sécurisée chiffrée de bout en bout avec votre médecin traitant.',
-                          );
-                        },
-                      ),
-                      ServiceItemData(
-                        icon: Icons.medication_outlined,
-                        title: 'Pharmacie',
-                        color: AppColors.accentOrange,
-                        backgroundColor: AppColors.softOrange,
-                        onTap: () {
-                          context.push(AppRoutes.prescriptions);
-                        },
-                      ),
-                      ServiceItemData(
-                        icon: Icons.biotech_outlined,
-                        title: 'Laboratoire',
-                        color: AppColors.accentPurple,
-                        backgroundColor: AppColors.softPurple,
-                        onTap: () {
-                          _showFeatureNotice(
-                            'Laboratoire & Analyses FHIR',
-                            'Consultez vos bilans sanguins, ordonnances de biologie et rapports d\'analyses certifiés.',
-                          );
-                        },
-                      ),
-                      ServiceItemData(
-                        icon: Icons.verified_outlined,
-                        title: 'Certificats & Cachet',
-                        badgeText: 'Officiel',
-                        color: AppColors.primary,
-                        backgroundColor: AppColors.softBlue,
-                        onTap: () {
-                          _showFeatureNotice(
-                            'Certificats Médicaux Officiels',
-                            'Téléchargez vos arrêts maladie et dispenses avec cachet circulaire infalsifiable et empreinte SHA-256 de l\'hôpital.',
-                          );
-                        },
-                      ),
-                    ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: RefreshIndicator(
+            onRefresh: _load,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. En-tête bleu compact avec avatar, salutations et actions
+                  HomeHeader(
+                    name: userName,
+                    userRole: userRole,
+                    notificationCount: 2,
+                    onProfileTap: () {
+                      context.push(AppRoutes.profile);
+                    },
+                    onSearchTap: () {
+                      context.push(AppRoutes.bookAppointment);
+                    },
+                    onNotificationTap: () {
+                      _showNotice(
+                        'Notifications & Alertes Médicales',
+                        'Retrouvez ici vos rappels de consultations, notifications de nouveaux résultats de laboratoire et alertes d\'urgence.',
+                      );
+                    },
                   ),
-                ),
+
+                  // 2. Grille des 6 services clés identique à l'écran 1 de la maquette
+                  Transform.translate(
+                    offset: const Offset(0, -22),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ServicesCard(
+                        services: [
+                          ServiceItemData(
+                            icon: Icons.monitor_weight_outlined,
+                            title: 'Consultation',
+                            badgeText: 'IMC',
+                            color: AppColors.primary,
+                            backgroundColor: AppColors.softBlue,
+                            onTap: () {
+                              context.push(AppRoutes.medicalRecord);
+                            },
+                          ),
+                          ServiceItemData(
+                            icon: Icons.calendar_month_outlined,
+                            title: 'Rendez-vous',
+                            color: AppColors.primary,
+                            backgroundColor: AppColors.softBlue,
+                            onTap: () {
+                              context.push(AppRoutes.bookAppointment);
+                            },
+                          ),
+                          ServiceItemData(
+                            icon: Icons.videocam_outlined,
+                            title: 'Téléconsult',
+                            badgeText: 'Jitsi',
+                            color: AppColors.accentGreen,
+                            backgroundColor: AppColors.softGreen,
+                            onTap: () {
+                              _showNotice(
+                                'Téléconsultation Vidéo',
+                                'Rejoignez votre médecin traitant en visioconférence sécurisée avec ordonnance électronique immédiate.',
+                              );
+                            },
+                          ),
+                          ServiceItemData(
+                            icon: Icons.medication_outlined,
+                            title: 'Pharmacie',
+                            color: AppColors.accentOrange,
+                            backgroundColor: AppColors.softOrange,
+                            onTap: () {
+                              context.push(AppRoutes.prescriptions);
+                            },
+                          ),
+                          ServiceItemData(
+                            icon: Icons.biotech_outlined,
+                            title: 'Laboratoire',
+                            color: AppColors.accentPurple,
+                            backgroundColor: AppColors.softPurple,
+                            onTap: () {
+                              _showNotice(
+                                'Analyses Médicales & FHIR',
+                                'Accédez à vos ordonnances de biologie et rapports d\'analyses sanguines certifiés.',
+                              );
+                            },
+                          ),
+                          ServiceItemData(
+                            icon: Icons.verified_outlined,
+                            title: 'Certificats',
+                            badgeText: 'Cachet',
+                            color: AppColors.primary,
+                            backgroundColor: AppColors.softBlue,
+                            onTap: () {
+                              _showNotice(
+                                'Certificats & Cachet Officiel',
+                                'Générez et téléchargez vos arrêts maladie et dispenses avec sceau officiel de l\'hôpital et QR code de vérification.',
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // 3. Départements Médicaux
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 2, 20, 14),
+                    child: SectionHeader(
+                      title: 'Départements',
+                      actionText: 'Voir tout',
+                      onActionTap: () {
+                        context.push(AppRoutes.bookAppointment);
+                      },
+                    ),
+                  ),
+
+                  SizedBox(
+                    height: 146,
+                    child: ListView(
+                      controller: _departmentController,
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        DepartmentCard(
+                          name: 'Médecine Générale',
+                          doctorCount: 647,
+                          icon: Icons.medical_services_rounded,
+                          color: AppColors.primary,
+                          backgroundColor: AppColors.softBlue,
+                          onTap: () {
+                            context.push(AppRoutes.bookAppointment);
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        DepartmentCard(
+                          name: 'Pédiatrie',
+                          doctorCount: 524,
+                          icon: Icons.child_care_rounded,
+                          color: AppColors.accentRed,
+                          backgroundColor: AppColors.softRed,
+                          onTap: () {
+                            context.push(AppRoutes.bookAppointment);
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        DepartmentCard(
+                          name: 'Cardiologie',
+                          doctorCount: 438,
+                          icon: Icons.favorite_rounded,
+                          color: AppColors.accentPink,
+                          backgroundColor: AppColors.softPink,
+                          onTap: () {
+                            context.push(AppRoutes.bookAppointment);
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        DepartmentCard(
+                          name: 'Radiologie & IA',
+                          doctorCount: 182,
+                          icon: Icons.document_scanner_rounded,
+                          color: AppColors.accentPurple,
+                          backgroundColor: AppColors.softPurple,
+                          onTap: () {
+                            context.push(AppRoutes.bookAppointment);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 26),
+
+                  // 4. Top Hôpitaux (Grandes cartes avec photos et détails)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                    child: SectionHeader(
+                      title: 'Top Hôpitaux',
+                      actionText: 'Voir tout',
+                      onActionTap: () {
+                        context.push(AppRoutes.bookAppointment);
+                      },
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        OrganizationCard(
+                          name: 'CHU Yalgado Ouédraogo',
+                          type: 'Hôpital Universitaire',
+                          address: 'Ouagadougou, Secteur 4',
+                          imageUrl: 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=600&auto=format&fit=crop&q=80',
+                          rating: 4.9,
+                          reviewCount: 512,
+                          tagText: 'Urgences 24/7',
+                          servicesCount: 18,
+                          doctorsCount: 142,
+                          onTap: () {
+                            context.push(AppRoutes.bookAppointment);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        OrganizationCard(
+                          name: 'Hôpital du District de Bogodogo',
+                          type: 'Hôpital Public',
+                          address: 'Ouagadougou, Secteur 30',
+                          imageUrl: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&auto=format&fit=crop&q=80',
+                          rating: 4.8,
+                          reviewCount: 342,
+                          tagText: 'Pédiatrie & Chirurgie',
+                          servicesCount: 12,
+                          doctorsCount: 86,
+                          onTap: () {
+                            context.push(AppRoutes.bookAppointment);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        OrganizationCard(
+                          name: 'Clinique Médicale Philadelphie',
+                          type: 'Clinique Spécialisée',
+                          address: 'Ouagadougou, Zone du Bois',
+                          imageUrl: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=600&auto=format&fit=crop&q=80',
+                          rating: 4.7,
+                          reviewCount: 215,
+                          tagText: 'Cardiologie & Soins Intensifs',
+                          servicesCount: 8,
+                          doctorsCount: 42,
+                          onTap: () {
+                            context.push(AppRoutes.bookAppointment);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 36),
+                ],
               ),
-
-              // 3. Départements médicaux avec carrousel horizontal
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
-                child: SectionHeader(
-                  title: 'Départements',
-                  subtitle: 'Explorez nos pôles médicaux spécialisés',
-                  actionText: 'Voir tout',
-                  onActionTap: () {
-                    _showFeatureNotice(
-                      'Tous les Départements',
-                      'Découvrez l\'ensemble des 18 spécialités cliniques disponibles dans le réseau MedScan.',
-                    );
-                  },
-                ),
-              ),
-
-              SizedBox(
-                height: 148,
-                child: ListView(
-                  controller: _departmentController,
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  physics: const BouncingScrollPhysics(),
-                  children: [
-                    DepartmentCard(
-                      name: 'Médecine Générale',
-                      doctorCount: 647,
-                      icon: Icons.medical_services_rounded,
-                      color: AppColors.primary,
-                      backgroundColor: AppColors.softBlue,
-                      onTap: () {
-                        context.push(AppRoutes.appointments);
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    DepartmentCard(
-                      name: 'Pédiatrie',
-                      doctorCount: 524,
-                      icon: Icons.child_care_rounded,
-                      color: AppColors.accentRed,
-                      backgroundColor: AppColors.softRed,
-                      onTap: () {
-                        context.push(AppRoutes.appointments);
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    DepartmentCard(
-                      name: 'Cardiologie',
-                      doctorCount: 438,
-                      icon: Icons.favorite_rounded,
-                      color: AppColors.accentPink,
-                      backgroundColor: AppColors.softPink,
-                      onTap: () {
-                        context.push(AppRoutes.appointments);
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    DepartmentCard(
-                      name: 'Radiologie & IA',
-                      doctorCount: 182,
-                      icon: Icons.document_scanner_rounded,
-                      color: AppColors.accentPurple,
-                      backgroundColor: AppColors.softPurple,
-                      onTap: () {
-                        context.push(AppRoutes.appointments);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // 4. Établissements de santé (Top Hospital)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-                child: SectionHeader(
-                  title: 'Top Hôpitaux',
-                  subtitle: 'Établissements partenaires conventionnés',
-                  actionText: 'Voir tout',
-                  onActionTap: () {
-                    _showFeatureNotice(
-                      'Réseau Hospitalier MedScan',
-                      'Consultez la liste complète des hôpitaux, cliniques et laboratoires du réseau.',
-                    );
-                  },
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    OrganizationCard(
-                      name: 'CHU Yalgado Ouédraogo',
-                      type: 'Hôpital Universitaire',
-                      address: 'Ouagadougou, Secteur 4',
-                      rating: 4.9,
-                      reviewCount: 512,
-                      tagText: 'Urgences 24/7',
-                      onTap: () {
-                        context.push(AppRoutes.appointments);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    OrganizationCard(
-                      name: 'Hôpital de Bogodogo',
-                      type: 'Hôpital de District',
-                      address: 'Ouagadougou, Secteur 30',
-                      rating: 4.8,
-                      reviewCount: 342,
-                      tagText: 'Chirurgie & Maternité',
-                      onTap: () {
-                        context.push(AppRoutes.appointments);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    OrganizationCard(
-                      name: 'Clinique Médicale Philadelphie',
-                      type: 'Clinique Privée',
-                      address: 'Ouagadougou, Zone du Bois',
-                      rating: 4.7,
-                      reviewCount: 215,
-                      tagText: 'Cardiologie de pointe',
-                      onTap: () {
-                        context.push(AppRoutes.appointments);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    OrganizationCard(
-                      name: 'Clinique Les Genêts',
-                      type: 'Centre Médico-chirurgical',
-                      address: 'Ouagadougou, Ouaga 2000',
-                      rating: 4.8,
-                      reviewCount: 189,
-                      tagText: 'Scanner & Télé-imagerie',
-                      onTap: () {
-                        context.push(AppRoutes.appointments);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 36),
-            ],
+            ),
           ),
         ),
       ),

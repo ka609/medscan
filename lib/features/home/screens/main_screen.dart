@@ -44,72 +44,70 @@ class _MainScreenState extends State<MainScreen> {
           16,
           12,
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 20,
-                spreadRadius: 0,
-                offset: const Offset(0, 6),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x140F172A),
+                    blurRadius: 20,
+                    spreadRadius: 0,
+                    offset: Offset(0, 6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: _onTabTapped,
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: AppColors.surface,
-              elevation: 0,
-
-              selectedItemColor: AppColors.primary,
-              unselectedItemColor: AppColors.textSecondary,
-
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-
-              selectedLabelStyle:
-                  AppTextStyles.bodySmall.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w700,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BottomNavigationBar(
+                  currentIndex: _currentIndex,
+                  onTap: _onTabTapped,
+                  type: BottomNavigationBarType.fixed,
+                  backgroundColor: AppColors.surface,
+                  elevation: 0,
+                  selectedItemColor: AppColors.primary,
+                  unselectedItemColor: AppColors.textSecondary,
+                  showSelectedLabels: true,
+                  showUnselectedLabels: true,
+                  selectedLabelStyle: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  unselectedLabelStyle: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  items: [
+                    _buildNavigationItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home_rounded,
+                      label: 'Accueil',
+                      index: 0,
+                    ),
+                    _buildNavigationItem(
+                      icon: Icons.calendar_month_outlined,
+                      activeIcon: Icons.calendar_month_rounded,
+                      label: 'Rendez-vous',
+                      index: 1,
+                    ),
+                    _buildNavigationItem(
+                      icon: Icons.message_outlined,
+                      activeIcon: Icons.message_rounded,
+                      label: 'Messages',
+                      index: 2,
+                    ),
+                    _buildNavigationItem(
+                      icon: Icons.person_outline,
+                      activeIcon: Icons.person_rounded,
+                      label: 'Profil',
+                      index: 3,
+                    ),
+                  ],
+                ),
               ),
-
-              unselectedLabelStyle:
-                  AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-
-              items: [
-                _buildNavigationItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home_rounded,
-                  label: 'Accueil',
-                  index: 0,
-                ),
-                _buildNavigationItem(
-                  icon: Icons.calendar_month_outlined,
-                  activeIcon: Icons.calendar_month_rounded,
-                  label: 'Rendez-vous',
-                  index: 1,
-                ),
-                _buildNavigationItem(
-                  icon: Icons.message_outlined,
-                  activeIcon: Icons.message_rounded,
-                  label: 'Messages',
-                  index: 2,
-                ),
-                _buildNavigationItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person_rounded,
-                  label: 'Profil',
-                  index: 3,
-                ),
-              ],
             ),
           ),
         ),
