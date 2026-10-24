@@ -349,49 +349,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ),
                                   ),
-
-                                  const SizedBox(height: 18),
-
-                                  // Badge de sécurité HDS
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 7,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.50),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: AppColors.primary.withValues(alpha: 0.15),
-                                      ),
-                                    ),
-                                    child: const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.security_rounded,
-                                          size: 14,
-                                          color: AppColors.primary,
-                                        ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'Hébergement certifié HDS • Chiffrement AES-256',
-                                          style: TextStyle(
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.primaryDark,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
                                 ],
                               ),
                             ),
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 22),
 
                       // Inscription (en blanc sur le fond sombre)
