@@ -68,6 +68,18 @@ class AppRoutes {
   static const orders = '/orders';
   static const orderDetails = '/orders/details';
 
+  // Téléconsultation
+  static const teleconsult = '/teleconsult';
+
+  // Certificats officiels
+  static const certificates = '/certificates';
+
+  // Orientations & Redirections
+  static const referrals = '/referrals';
+
+  // Réclamations & Déontologie
+  static const grievances = '/grievances';
+
   // Livraison
   static const deliveryTracking = '/delivery/tracking';
 }

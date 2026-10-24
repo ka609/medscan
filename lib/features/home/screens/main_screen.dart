@@ -5,6 +5,7 @@ import '../../../core/theme/app_text_styles.dart';
 import 'home_screen.dart';
 import '../../profil/screens/profile_screen.dart';
 import '../../appointments/screens/appointments_screen.dart';
+import '../../messaging/screens/messaging_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
     AppointmentsScreen(),
-    _PlaceholderScreen(title: 'Messages'),
+    MessagingScreen(),
     ProfileScreen(),
   ];
 
@@ -159,35 +160,6 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
       label: label,
-    );
-  }
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({
-    required this.title,
-  });
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(title),
-      ),
-      body: Center(
-        child: Text(
-          'Écran "$title" à venir',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ),
     );
   }
 }

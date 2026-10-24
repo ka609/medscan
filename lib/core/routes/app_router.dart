@@ -12,6 +12,11 @@ import '../../features/profil/screens/profile_screen.dart';
 import '../../features/medical/screens/prescription_screen.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
 import '../../features/appointments/screens/book_appointment_screen.dart';
+import '../../features/certificates/screens/certificates_screen.dart';
+import '../../features/referrals/screens/referrals_screen.dart';
+import '../../features/grievances/screens/grievances_screen.dart';
+import '../../features/messaging/screens/messaging_screen.dart';
+import '../../features/teleconsult/screens/teleconsult_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -30,6 +35,11 @@ class AppRoutes {
   static const String prescriptions = '/prescriptions';
   static const String appointments = '/appointments';
   static const String bookAppointment = '/appointments/book';
+  static const String messages = '/messages';
+  static const String certificates = '/certificates';
+  static const String referrals = '/referrals';
+  static const String grievances = '/grievances';
+  static const String teleconsult = '/teleconsult';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -126,6 +136,41 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.bookAppointment,
       builder: (context, state) {
         return const BookAppointmentScreen();
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.messages,
+      builder: (context, state) {
+        return const MessagingScreen();
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.certificates,
+      builder: (context, state) {
+        return const CertificatesScreen();
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.referrals,
+      builder: (context, state) {
+        return const ReferralsScreen();
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.grievances,
+      builder: (context, state) {
+        return const GrievancesScreen();
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.teleconsult,
+      builder: (context, state) {
+        return const TeleconsultScreen();
       },
     ),
   ],

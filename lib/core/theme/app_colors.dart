@@ -48,6 +48,7 @@ class AppColors {
   static const Color error = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
   static const Color star = Color(0xFFF59E0B);
+  static const Color starGold = Color(0xFFF59E0B);
 
   // Badges
   static const Color badgeRatingBg = Color(0xFFFEF3C7);

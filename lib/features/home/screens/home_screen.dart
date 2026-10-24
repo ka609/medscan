@@ -45,92 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showNotice(String title, String description) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.medical_services_rounded,
-                        color: AppColors.primary,
-                        size: 26,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text('Compris'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
@@ -163,10 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       context.push(AppRoutes.bookAppointment);
                     },
                     onNotificationTap: () {
-                      _showNotice(
-                        'Notifications & Alertes Médicales',
-                        'Retrouvez ici vos rappels de consultations, notifications de nouveaux résultats de laboratoire et alertes d\'urgence.',
-                      );
+                      context.push(AppRoutes.messages);
                     },
                   ),
 
@@ -203,10 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: AppColors.accentGreen,
                             backgroundColor: AppColors.softGreen,
                             onTap: () {
-                              _showNotice(
-                                'Téléconsultation Vidéo',
-                                'Rejoignez votre médecin traitant en visioconférence sécurisée avec ordonnance électronique immédiate.',
-                              );
+                              context.push(AppRoutes.teleconsult);
                             },
                           ),
                           ServiceItemData(
@@ -219,15 +127,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                           ),
                           ServiceItemData(
-                            icon: Icons.biotech_outlined,
-                            title: 'Laboratoire',
-                            color: AppColors.accentPurple,
-                            backgroundColor: AppColors.softPurple,
+                            icon: Icons.swap_horiz_rounded,
+                            title: 'Orientations',
+                            badgeText: 'Transfert',
+                            color: const Color(0xFF0D9488),
+                            backgroundColor: const Color(0xFFCCFBF1),
                             onTap: () {
-                              _showNotice(
-                                'Analyses Médicales & FHIR',
-                                'Accédez à vos ordonnances de biologie et rapports d\'analyses sanguines certifiés.',
-                              );
+                              context.push(AppRoutes.referrals);
                             },
                           ),
                           ServiceItemData(
@@ -237,10 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: AppColors.primary,
                             backgroundColor: AppColors.softBlue,
                             onTap: () {
-                              _showNotice(
-                                'Certificats & Cachet Officiel',
-                                'Générez et téléchargez vos arrêts maladie et dispenses avec sceau officiel de l\'hôpital et QR code de vérification.',
-                              );
+                              context.push(AppRoutes.certificates);
                             },
                           ),
                         ],
@@ -378,6 +281,99 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                       ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 5. Qualité des Soins, Éthique & Réclamations (MOD-18)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.25)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0C000000),
+                            blurRadius: 12,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3E8FF),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.rate_review_rounded,
+                                  color: Color(0xFF6D28D9),
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Avis & Réclamations Médicales',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Suivi direct par la Direction Hospitalière (MOD-18)',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Exprimez vos retours sur la qualité de prise en charge, signalez un retard anormal ou un litige déontologique en toute confidentialité.',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                context.push(AppRoutes.grievances);
+                              },
+                              icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                              label: const Text('Déposer un avis ou consulter mes réclamations'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF6D28D9),
+                                side: const BorderSide(color: Color(0xFF8B5CF6)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
