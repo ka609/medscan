@@ -44,7 +44,9 @@ class _MainScreenState extends State<MainScreen> {
           16,
           12,
         ),
-        child: Center(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          heightFactor: 1.0,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: Container(

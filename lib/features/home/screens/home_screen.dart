@@ -38,9 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _load() async {
-    await Future.wait([
-      context.read<PatientProvider>().getMyRecord(),
-    ]);
+    try {
+      await context.read<PatientProvider>().getMyRecord();
+    } catch (_) {
+      // Évite de bloquer l'affichage si le réseau met du temps
+    }
   }
 
   void _showNotice(String title, String description) {
