@@ -92,4 +92,16 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     color: AppColors.textOnPrimary,
   );
+
+  static TextStyle get stepTitle => _base.copyWith(
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    color: AppColors.primary,
+  );
+
+  static TextStyle get ratingText => _base.copyWith(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: AppColors.badgeRatingText,
+  );
 }

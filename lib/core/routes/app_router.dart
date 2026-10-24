@@ -11,6 +11,7 @@ import '../../features/medical/screens/medical_record_screen.dart';
 import '../../features/profil/screens/profile_screen.dart';
 import '../../features/medical/screens/prescription_screen.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
+import '../../features/appointments/screens/book_appointment_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -28,6 +29,7 @@ class AppRoutes {
   static const String medicalRecord = '/medical-record';
   static const String prescriptions = '/prescriptions';
   static const String appointments = '/appointments';
+  static const String bookAppointment = '/appointments/book';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -114,11 +116,18 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
-  path: AppRoutes.appointments,
-  builder: (context, state) {
-    return const AppointmentsScreen();
-  },
-),
+      path: AppRoutes.appointments,
+      builder: (context, state) {
+        return const AppointmentsScreen();
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.bookAppointment,
+      builder: (context, state) {
+        return const BookAppointmentScreen();
+      },
+    ),
   ],
 
   errorBuilder: (context, state) {

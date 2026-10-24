@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../widgets/appointment_card.dart';
@@ -121,7 +123,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
       itemCount: _appointments.length,
-      separatorBuilder: (_, __) {
+      separatorBuilder: (_, _) {
         return const SizedBox(height: 14);
       },
       itemBuilder: (context, index) {
@@ -189,11 +191,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   }
 
   void _createAppointment() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Création de rendez-vous : bientôt disponible'),
-      ),
-    );
+    context.push(AppRoutes.bookAppointment);
   }
 
   void _cancelAppointment(int index) {

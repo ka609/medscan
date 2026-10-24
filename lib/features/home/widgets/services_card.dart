@@ -1,26 +1,30 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 import 'service_item.dart';
 
 class ServicesCard extends StatelessWidget {
-  const ServicesCard({super.key, required this.services});
+  const ServicesCard({
+    super.key,
+    required this.services,
+  });
 
   final List<ServiceItemData> services;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: AppTheme.borderRadiusLarge,
-        boxShadow: [
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Color(0x0C0F172A),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: Offset(0, 8),
           ),
         ],
       ),
@@ -28,21 +32,16 @@ class ServicesCard extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: services.length,
+        padding: EdgeInsets.zero,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-          childAspectRatio: 1.15,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1.05,
         ),
         itemBuilder: (context, index) {
           final service = services[index];
-
-          return ServiceItem(
-            icon: service.icon,
-            title: service.title,
-            color: service.color,
-            onTap: service.onTap,
-          );
+          return ServiceItem(item: service);
         },
       ),
     );
