@@ -246,7 +246,7 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Parcours d\'orientation inter-hospitalière (MOD-16) :',
+                'Parcours d\'orientation inter-hospitalière :',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               ),
               const SizedBox(height: 10),
@@ -389,7 +389,7 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
                 ),
               ),
 
-              // 2. Bannière MOD-16
+              // 2. Bannière de continuité des soins
               Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(14),
@@ -426,7 +426,7 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Continuité des Soins (MOD-16)',
+                            'Continuité des Soins',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 15,

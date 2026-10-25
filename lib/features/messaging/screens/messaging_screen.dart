@@ -203,7 +203,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
                       ),
                     ),
                     Text(
-                      'En ligne • Échange chiffré HDS / MOD-15',
+                      'En ligne • Échange chiffré et sécurisé HDS',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.accentGreen,
@@ -442,3 +442,4 @@ class _MessagingScreenState extends State<MessagingScreen> {
     );
   }
 }
+

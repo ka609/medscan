@@ -286,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 24),
 
-                  // 5. Qualité des Soins, Éthique & Réclamations (MOD-18)
+                  // 5. Qualité des Soins, Éthique & Réclamations
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
@@ -334,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     Text(
-                                      'Suivi direct par la Direction Hospitalière (MOD-18)',
+                                      'Suivi direct par la Direction Hospitalière',
                                       style: TextStyle(
                                         fontSize: 11.5,
                                         color: AppColors.textSecondary,

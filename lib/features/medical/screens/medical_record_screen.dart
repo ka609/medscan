@@ -124,11 +124,16 @@ String _date(dynamic v, {bool withTime = false}) {
 String _gender(dynamic v) {
   switch (v?.toString().toUpperCase()) {
     case 'M':
-      return 'Homme';
+    case 'HOMME':
+    case 'MASCULIN':
+      return 'Masculin';
     case 'F':
-      return 'Femme';
+    case 'FEMME':
+    case 'FEMININ':
+    case 'FÉMININ':
+      return 'Féminin';
     default:
-      return _text(v);
+      return 'Masculin';
   }
 }
 

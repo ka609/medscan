@@ -125,7 +125,7 @@ class _GrievancesScreenState extends State<GrievancesScreen> {
                 ),
               ),
 
-              // 2. Bannière MOD-18
+              // 2. Bannière de déontologie
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
                 padding: const EdgeInsets.all(14),
@@ -162,7 +162,7 @@ class _GrievancesScreenState extends State<GrievancesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Écoute Usager & Déontologie (MOD-18)',
+                            'Écoute Usager & Déontologie',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 14.5,

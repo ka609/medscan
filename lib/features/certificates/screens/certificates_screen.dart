@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../models/certificate.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../services/certificate_service.dart';
 
 class CertificatesScreen extends StatefulWidget {
@@ -221,6 +223,15 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final isDoctor = user?.roles.any(
+          (r) =>
+              r.toUpperCase().contains('DOCTOR') ||
+              r.toUpperCase().contains('PRATICIEN') ||
+              r.toUpperCase().contains('MEDECIN'),
+        ) ??
+        false;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -237,15 +248,17 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showNewCertificateDialog,
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.verified_rounded, color: Colors.white),
-        label: const Text(
-          'Émettre un certificat',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      ),
+      floatingActionButton: isDoctor
+          ? FloatingActionButton.extended(
+              onPressed: _showNewCertificateDialog,
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.verified_rounded, color: Colors.white),
+              label: const Text(
+                'Émettre un certificat',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            )
+          : null,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
@@ -271,7 +284,7 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                 ),
               ),
 
-              // 2. Bannière de sécurité et conformité MOD-17
+              // 2. Bannière de sécurité et conformité officielle
               Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(14),
@@ -308,7 +321,7 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Documents Médicaux Certifiés',
+                            'Délivrance Médicale Sécurisée',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 15,
@@ -317,7 +330,7 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                           ),
                           SizedBox(height: 3),
                           Text(
-                            'Chaque certificat comporte le cachet officiel circulaire de l\'établissement et un sceau numérique SHA-256 infalsifiable.',
+                            'Seul votre médecin traitant est habilité à établir un certificat. Retrouvez ici tous vos arrêts de travail et dispenses validés, avec cachet officiel circulaire et sceau infalsifiable.',
                             style: TextStyle(
                               color: Color(0xFFE0E7FF),
                               fontSize: 12,
@@ -863,7 +876,7 @@ class _OfficialCertificateModal extends StatelessWidget {
   }
 }
 
-/// Cachet Circulaire Officiel de l'Hôpital (MOD-17)
+/// Cachet Circulaire Officiel de l'Hôpital
 class _CircularHospitalSeal extends StatelessWidget {
   const _CircularHospitalSeal({
     required this.hospitalName,

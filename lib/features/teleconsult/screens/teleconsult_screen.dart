@@ -81,7 +81,7 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Session Jitsi chiffrée de bout en bout conforme HDS (MOD-12).',
+                        'Session Jitsi chiffrée de bout en bout conforme HDS.',
                         style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -413,3 +413,4 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
     );
   }
 }
+

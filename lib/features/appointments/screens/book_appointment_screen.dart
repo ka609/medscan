@@ -20,8 +20,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   // Données sélectionnées
   String? _selectedService = 'Médecine Générale';
   String? _selectedHospital = 'CHU Yalgado Ouédraogo';
-  String? _selectedDoctor = 'Dr. Amadou Diallo';
-  String? _selectedDoctorSpeciality = 'Médecine interne & Générale';
+  final String _assignedDoctor = 'Assigné automatiquement par l\'administration';
+  final String _assignedDoctorSpeciality = 'Médecin spécialiste selon planning';
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String _selectedTimeSlot = '10:00 - 11:00';
 
@@ -31,7 +31,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   final _phoneController = TextEditingController(text: '+226 70 12 34 56');
   final _weightController = TextEditingController(text: '72');
   final _heightController = TextEditingController(text: '178');
-  String _selectedGender = 'Homme';
+  String _selectedGender = 'Masculin';
   String _selectedBloodGroup = 'O+';
 
   // Champs personnalisés dynamiques (clé: valeur)
@@ -176,7 +176,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Votre consultation avec $_selectedDoctor est validée au $_selectedHospital le ${_formatDate(_selectedDate)} à $_selectedTimeSlot.',
+                  'Votre demande de consultation en $_selectedService est confirmée au $_selectedHospital le ${_formatDate(_selectedDate)} à $_selectedTimeSlot.\n\nPraticien : $_assignedDoctor selon le planning de régulation web.',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyRegular.copyWith(
                     color: AppColors.textSecondary,
@@ -288,7 +288,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       case 2:
         return 'Étape 2 sur 5 : Choisir l\'hôpital';
       case 3:
-        return 'Étape 3 sur 5 : Choisir le médecin';
+        return 'Étape 3 sur 5 : Date & Créneau souhaité';
       case 4:
         return 'Étape 4 sur 5 : Patient & Biométrie';
       case 5:
@@ -305,7 +305,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       case 2:
         return _buildStep2Hospital();
       case 3:
-        return _buildStep3Doctor();
+        return _buildStep3Schedule();
       case 4:
         return _buildStep4PatientAndBmi();
       case 5:
@@ -599,33 +599,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     );
   }
 
-  // --- ÉTAPE 3 : CHOISIR LE MÉDECIN & LE CRÉNEAU ---
-  Widget _buildStep3Doctor() {
-    final doctors = [
-      {
-        'name': 'Dr. Amadou Diallo',
-        'speciality': 'Médecine interne & Générale',
-        'rating': 4.9,
-        'reviews': 456,
-        'available': 'Demain à 10:00',
-      },
-      {
-        'name': 'Dr. Edward Jenner',
-        'speciality': 'Endocrinologie & Métabolisme',
-        'rating': 4.8,
-        'reviews': 380,
-        'available': 'Demain à 11:30',
-      },
-      {
-        'name': 'Dr. Fatimata Sawadogo',
-        'speciality': 'Pédiatrie & Soins Urgents',
-        'rating': 4.9,
-        'reviews': 295,
-        'available': 'Jeudi à 09:00',
-      },
-    ];
-
+  // --- ÉTAPE 3 : PLANIFICATION & ATTRIBUTION AUTOMATIQUE DU MÉDECIN ---
+  Widget _buildStep3Schedule() {
     final timeSlots = [
+      '08:00 - 09:00',
       '09:00 - 10:00',
       '10:00 - 11:00',
       '11:30 - 12:30',
@@ -637,83 +614,105 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Médecins Recommandés', style: AppTextStyles.h3),
-        const SizedBox(height: 14),
-        ...doctors.map((d) {
-          final isSelected = _selectedDoctor == d['name'];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedDoctor = d['name'] as String;
-                  _selectedDoctorSpeciality = d['speciality'] as String;
-                });
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.border,
-                    width: isSelected ? 2 : 1,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.shadowLight,
-                      blurRadius: 10,
-                      offset: Offset(0, 3),
+        // Carte d'attribution automatique par l'administration hospitalière
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFEEF5FF), Color(0xFFF3F8FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
+                    child: const Icon(
+                      Icons.admin_panel_settings_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Régulation Hospitalière',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryDark,
+                          ),
+                        ),
+                        Text(
+                          'Assignation automatique du praticien',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Selon le protocole de l\'établissement ($_selectedHospital), vous ne choisissez pas directement votre médecin. Le praticien disponible et qualifié vous est automatiquement assigné selon le planning de garde validé par l\'administration web de l\'hôpital.',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textPrimary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundColor: AppColors.primaryContainer,
-                      child: const Icon(Icons.person_rounded, color: AppColors.primary, size: 30),
-                    ),
-                    const SizedBox(width: 14),
+                    const Icon(Icons.sync_rounded, size: 16, color: AppColors.accentGreen),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            d['name'] as String,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            d['speciality'] as String,
-                            style: AppTextStyles.caption.copyWith(fontSize: 12),
-                          ),
-                          const SizedBox(height: 6),
-                          RatingBadge(
-                            rating: d['rating'] as double,
-                            reviewCount: d['reviews'] as int,
-                          ),
-                        ],
+                      child: Text(
+                        'Service : $_selectedService • Attribution synchronisée Web Admin',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                    Icon(
-                      isSelected ? Icons.check_circle_rounded : Icons.radio_button_off_rounded,
-                      color: isSelected ? AppColors.primary : AppColors.border,
-                      size: 22,
                     ),
                   ],
                 ),
               ),
-            ),
-          );
-        }),
+            ],
+          ),
+        ),
 
         const SizedBox(height: 24),
-        Text('Choisir la Date & Heure', style: AppTextStyles.h3),
+        Text('Choisir la Date de Consultation', style: AppTextStyles.h3),
+        const SizedBox(height: 6),
+        Text(
+          'Sélectionnez le jour qui vous convient',
+          style: AppTextStyles.caption,
+        ),
         const SizedBox(height: 14),
 
         // Sélecteur horizontal de jours
@@ -774,8 +773,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           ),
         ),
 
-        const SizedBox(height: 20),
-        Text('Créneaux Disponibles', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 22),
+        Text('Créneaux Horaires Disponibles', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
         const SizedBox(height: 12),
 
         Wrap(
@@ -852,8 +851,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               child: DropdownButtonFormField<String>(
                 initialValue: _selectedGender,
                 decoration: InputDecoration(
-                  labelText: 'Sexe / Genre',
-                  prefixIcon: const Icon(Icons.transgender_rounded, color: AppColors.primary),
+                  labelText: 'Sexe',
+                  prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.primary),
                   filled: true,
                   fillColor: AppColors.surface,
                   border: OutlineInputBorder(
@@ -861,7 +860,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     borderSide: const BorderSide(color: AppColors.border),
                   ),
                 ),
-                items: ['Homme', 'Femme', 'Autre']
+                items: ['Masculin', 'Féminin']
                     .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                     .toList(),
                 onChanged: (val) {
@@ -1160,13 +1159,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               _buildSummaryRow(
                 icon: Icons.medical_services_rounded,
                 title: 'Service & Spécialité',
-                value: '$_selectedService ($_selectedDoctorSpeciality)',
+                value: '$_selectedService ($_assignedDoctorSpeciality)',
               ),
               const Divider(height: 24, color: AppColors.borderLight),
               _buildSummaryRow(
-                icon: Icons.person_rounded,
+                icon: Icons.assignment_ind_rounded,
                 title: 'Médecin Praticien',
-                value: _selectedDoctor ?? '-',
+                value: _assignedDoctor,
               ),
               const Divider(height: 24, color: AppColors.borderLight),
               _buildSummaryRow(

@@ -28,7 +28,7 @@ void main() {
     });
   });
 
-  group('MedicalCertificate (MOD-17)', () {
+  group('MedicalCertificate', () {
     test('MedicalCertificate deserialization and type labels', () {
       final cert = MedicalCertificate.fromJson({
         'id': 'cert-1',
@@ -47,7 +47,7 @@ void main() {
     });
   });
 
-  group('MedicalReferral (MOD-16)', () {
+  group('MedicalReferral', () {
     test('MedicalReferral deserialization and priority tracking', () {
       final ref = MedicalReferral.fromJson({
         'id': 'ref-1',
@@ -69,7 +69,7 @@ void main() {
     });
   });
 
-  group('PatientGrievance (MOD-18)', () {
+  group('PatientGrievance', () {
     test('PatientGrievance deserialization and status tracking', () {
       final grv = PatientGrievance.fromJson({
         'id': 'grv-1',
@@ -92,7 +92,7 @@ void main() {
     });
   });
 
-  group('ClinicalMessage & Alert (MOD-15)', () {
+  group('ClinicalMessage & Alert', () {
     test('ClinicalMessage urgent flag detection', () {
       final msg = ClinicalMessage.fromJson({
         'id': 'msg-1',
