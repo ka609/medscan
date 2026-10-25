@@ -51,3 +51,4 @@ class IdGenerator {
     return suffix.substring(0, 6);
   }
 }
+

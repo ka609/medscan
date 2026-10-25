@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:medscan/core/network/api_exceptions.dart';
 import 'package:medscan/core/theme/app_colors.dart';
 import 'package:medscan/core/utils/id_generator.dart';
 import 'package:medscan/models/certificate.dart';
@@ -16,6 +17,28 @@ void main() {
       expect(AppColors.background.toARGB32(), 0xFFF7F9FC);
       expect(AppColors.surface.toARGB32(), 0xFFFFFFFF);
       expect(AppColors.starGold.toARGB32(), 0xFFF59E0B);
+    });
+  });
+
+  group('ApiException (Zéro code null & messages clairs)', () {
+    test('ApiException defaults code to non-null and toString returns clean message', () {
+      const defaultEx = ApiException(message: 'Erreur inattendue');
+      expect(defaultEx.code, isNotNull);
+      expect(defaultEx.code, 'API_ERROR');
+      expect(defaultEx.toString(), 'Erreur inattendue');
+
+      const unauthEx = UnauthorizedException(detail: 'Identifiants invalides');
+      expect(unauthEx.code, 'UNAUTHORIZED');
+      expect(unauthEx.statusCode, 401);
+      expect(unauthEx.toString(), 'Identifiants invalides');
+
+      const netEx = NetworkException();
+      expect(netEx.code, 'NETWORK_ERROR');
+      expect(netEx.toString(), contains('Impossible de contacter'));
+
+      const timeoutEx = TimeoutException();
+      expect(timeoutEx.code, 'TIMEOUT');
+      expect(timeoutEx.statusCode, 408);
     });
   });
 

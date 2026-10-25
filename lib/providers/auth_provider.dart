@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../core/network/api_exceptions.dart';
 import '../models/user.dart';
 import '../repositories/auth_repository.dart';
 
@@ -37,7 +38,7 @@ class AuthProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
       _user = null;
 
       return false;
@@ -58,7 +59,7 @@ class AuthProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
       _user = null;
 
       return false;
@@ -78,7 +79,7 @@ class AuthProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
 
       return false;
     } finally {
@@ -93,7 +94,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       _user = await _repository.getMe();
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
     } finally {
       _setLoading(false);
     }
@@ -106,10 +107,18 @@ class AuthProvider extends ChangeNotifier {
       await _repository.logout();
       _user = null;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
     } finally {
       _setLoading(false);
     }
+  }
+
+  String _extractErrorMessage(dynamic error) {
+    if (error is ApiException) {
+      return error.detail ?? error.message;
+    }
+    final str = error.toString();
+    return str.replaceFirst(RegExp(r'^Exception:\s*'), '');
   }
 
   void clearError() {

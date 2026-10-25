@@ -329,7 +329,7 @@ class ApiClient {
       return NetworkException(message: error.message ?? 'Erreur réseau.');
     }
 
-    return ApiException(message: error.toString());
+    return ApiException(message: error.toString(), code: 'CLIENT_ERROR');
   }
 
   ApiException _exceptionFromStatus(int statusCode, dynamic data) {
@@ -337,9 +337,16 @@ class ApiClient {
     final title = _extractString(data, 'title');
     final detail = _extractString(data, 'detail');
     final instance = _extractString(data, 'instance');
-    final code = _extractString(data, 'code');
+    final code = _extractString(data, 'code') ??
+        _extractString(data, 'errorCode') ??
+        _extractCodeFromType(type) ??
+        _defaultCodeForStatus(statusCode);
 
-    final message = detail ?? title ?? 'Une erreur est survenue.';
+    final message = detail ??
+        title ??
+        _extractString(data, 'message') ??
+        _extractString(data, 'error') ??
+        'Une erreur est survenue.';
 
     switch (statusCode) {
       case 400:
@@ -433,6 +440,35 @@ class ApiClient {
           instance: instance,
           data: data,
         );
+    }
+  }
+
+  String? _extractCodeFromType(String? type) {
+    if (type == null || type.trim().isEmpty) return null;
+    final lastPart = type.split('/').last.trim();
+    if (lastPart.isNotEmpty) {
+      return lastPart.toUpperCase().replaceAll('-', '_');
+    }
+    return null;
+  }
+
+  String _defaultCodeForStatus(int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return 'BAD_REQUEST';
+      case 401:
+        return 'UNAUTHORIZED';
+      case 403:
+        return 'FORBIDDEN';
+      case 404:
+        return 'NOT_FOUND';
+      case 409:
+        return 'CONFLICT';
+      case 422:
+        return 'VALIDATION_ERROR';
+      default:
+        if (statusCode >= 500) return 'SERVER_ERROR';
+        return 'HTTP_$statusCode';
     }
   }
 
