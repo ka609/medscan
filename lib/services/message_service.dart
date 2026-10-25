@@ -57,6 +57,43 @@ class MessageService {
     });
   }
 
+  static final List<ClinicalAlert> _inMemoryAlerts = [
+    ClinicalAlert(
+      id: 'alt-001',
+      title: 'Alerte Labo : Résultats Biologiques Disponibles',
+      message: 'Vos résultats d\'analyses de glycémie à jeun et d\'ionogramme complet sont validés par le laboratoire central.',
+      type: 'LAB_CRITICAL',
+      severity: 'INFO',
+      timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
+      isRead: false,
+      actionRoute: '/medical-record',
+    ),
+    ClinicalAlert(
+      id: 'alt-002',
+      title: 'Rappel de Rendez-vous Médical',
+      message: 'Votre téléconsultation de cardiologie est programmée demain à 10:30 avec Dr. Amadou Ouédraogo.',
+      type: 'APPOINTMENT',
+      severity: 'INFO',
+      timestamp: DateTime.now().subtract(const Duration(hours: 3)),
+      isRead: true,
+      actionRoute: '/appointments',
+    ),
+    ClinicalAlert(
+      id: 'alt-003',
+      title: 'Alerte Constantes : IMC Calculé',
+      message: 'Votre IMC calculé lors du dernier enregistrement est de 24.2 kg/m² (Corpulence normale). Continuer l\'activité physique régulière.',
+      type: 'VITALS_ALERT',
+      severity: 'INFO',
+      timestamp: DateTime.now().subtract(const Duration(days: 1)),
+      isRead: true,
+      actionRoute: '/medical-record',
+    ),
+  ];
+
+  static void addAlert(ClinicalAlert alert) {
+    _inMemoryAlerts.insert(0, alert);
+  }
+
   Future<List<ClinicalAlert>> getAlerts() async {
     try {
       final response = await _apiClient.get('/v1/notifications');
@@ -70,7 +107,7 @@ class MessageService {
       // Fallback
     }
 
-    return _getDemoAlerts();
+    return List<ClinicalAlert>.from(_inMemoryAlerts);
   }
 
   List<ClinicalMessage> _getDemoMessages() {
@@ -125,41 +162,6 @@ class MessageService {
         priority: 'URGENT',
         readAt: null,
         sentAt: DateTime.now().subtract(const Duration(minutes: 35)),
-      ),
-    ];
-  }
-
-  List<ClinicalAlert> _getDemoAlerts() {
-    return [
-      ClinicalAlert(
-        id: 'alt-001',
-        title: 'Alerte Labo : Résultats Biologiques Disponibles',
-        message: 'Vos résultats d\'analyses de glycémie à jeun et d\'ionogramme complet sont validés par le laboratoire central.',
-        type: 'LAB_CRITICAL',
-        severity: 'INFO',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
-        isRead: false,
-        actionRoute: '/medical-record',
-      ),
-      ClinicalAlert(
-        id: 'alt-002',
-        title: 'Rappel de Rendez-vous Médical',
-        message: 'Votre téléconsultation de cardiologie est programmée demain à 10:30 avec Dr. Amadou Ouédraogo.',
-        type: 'APPOINTMENT',
-        severity: 'INFO',
-        timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-        isRead: true,
-        actionRoute: '/appointments',
-      ),
-      ClinicalAlert(
-        id: 'alt-003',
-        title: 'Alerte Constantes : IMC Calculé',
-        message: 'Votre IMC calculé lors du dernier enregistrement est de 24.2 kg/m² (Corpulence normale). Continuer l\'activité physique régulière.',
-        type: 'VITALS_ALERT',
-        severity: 'INFO',
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        isRead: true,
-        actionRoute: '/medical-record',
       ),
     ];
   }

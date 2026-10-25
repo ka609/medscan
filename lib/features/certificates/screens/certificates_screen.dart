@@ -51,9 +51,11 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
   }
 
   void _showNewCertificateDialog() {
-    final reasonController = TextEditingController();
-    final employerController = TextEditingController();
-    int restDays = 3;
+    final patientNameController = TextEditingController(text: 'Kala Pham');
+    final patientPhoneController = TextEditingController(text: '+226 70 12 34 56');
+    final employerController = TextEditingController(text: 'Direction Générale des Ressources Humaines');
+    final reasonController = TextEditingController(text: 'Syndrome viral fébrile aigu nécessitant repos strict à domicile.');
+    int restDays = 4;
     String certType = 'SICK_LEAVE';
 
     showDialog(
@@ -61,19 +63,107 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final now = DateTime.now();
+            final startDateStr = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+            final endDate = now.add(Duration(days: restDays));
+            final endDateStr = '${endDate.day.toString().padLeft(2, '0')}/${endDate.month.toString().padLeft(2, '0')}/${endDate.year}';
+
             return AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
               ),
-              title: const Text(
-                'Émettre un certificat officiel',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryContainer,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.post_add_rounded, color: AppColors.primary, size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Émettre un certificat médical (Médecin)',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16.5),
+                    ),
+                  ),
+                ],
               ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'Nom et Prénom du patient destinataire *',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: patientNameController,
+                      decoration: InputDecoration(
+                        hintText: 'Ex: Kala Pham',
+                        prefixIcon: const Icon(Icons.person_rounded, color: AppColors.primary),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Raccourcis patients
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        'Kala Pham (Connecté)',
+                        'Kaboré Souleymane',
+                        'Fatimata Traoré',
+                      ].map((name) {
+                        final cleanName = name.split(' (').first;
+                        final isSelected = patientNameController.text.trim() == cleanName;
+                        return ActionChip(
+                          avatar: Icon(Icons.check, size: 14, color: isSelected ? Colors.white : AppColors.textSecondary),
+                          label: Text(name, style: TextStyle(fontSize: 11, color: isSelected ? Colors.white : AppColors.textPrimary)),
+                          backgroundColor: isSelected ? AppColors.primary : AppColors.background,
+                          onPressed: () {
+                            setDialogState(() {
+                              patientNameController.text = cleanName;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 12),
+
+                    const Text(
+                      'Téléphone / Contact patient',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: patientPhoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        hintText: '+226 70 00 00 00',
+                        prefixIcon: const Icon(Icons.phone_rounded, color: AppColors.primary),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
                     const Text(
                       'Type de document',
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
@@ -84,15 +174,15 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                       items: const [
                         DropdownMenuItem(
                           value: 'SICK_LEAVE',
-                          child: Text('Arrêt de travail (Maladie)'),
+                          child: Text('Arrêt de travail (Employeur)'),
                         ),
                         DropdownMenuItem(
                           value: 'STUDENT_DISPENSE',
-                          child: Text('Dispense scolaire/universitaire'),
+                          child: Text('Dispense scolaire / universitaire'),
                         ),
                         DropdownMenuItem(
                           value: 'FITNESS_CERTIFICATE',
-                          child: Text('Aptitude physique / sport'),
+                          child: Text('Certificat médical d\'aptitude'),
                         ),
                       ],
                       onChanged: (val) {
@@ -112,58 +202,106 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
-                      'Durée du repos (jours)',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                    ),
-                    const SizedBox(height: 6),
+
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        IconButton(
-                          onPressed: restDays > 1
-                              ? () => setDialogState(() => restDays--)
-                              : null,
-                          icon: const Icon(Icons.remove_circle_outline),
+                        const Text(
+                          'Durée du repos :',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                         ),
-                        Text(
-                          '$restDays jour(s)',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => setDialogState(() => restDays++),
-                          icon: const Icon(Icons.add_circle_outline),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: restDays > 1
+                                  ? () => setDialogState(() => restDays--)
+                                  : null,
+                              icon: const Icon(Icons.remove_circle_outline, color: AppColors.primary),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.softBlue,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '$restDays jour(s)',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => setDialogState(() => restDays++),
+                              icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.softGreen,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.event_available_rounded, size: 16, color: AppColors.accentGreen),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Période couverte : Du $startDateStr au $endDateStr inclus',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accentGreen),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    const Text(
+                      'Employeur ou Établissement destinataire',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
                     TextField(
                       controller: employerController,
                       decoration: InputDecoration(
-                        labelText: 'Employeur / Établissement',
-                        hintText: 'Ex: Ministère, Entreprise XYZ',
+                        hintText: 'Ex: Direction RH, Entreprise XYZ',
+                        prefixIcon: const Icon(Icons.business_rounded, color: AppColors.primary),
                         filled: true,
                         fillColor: AppColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
                     ),
                     const SizedBox(height: 12),
+
+                    const Text(
+                      'Motif clinique / Diagnostic légal',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
                     TextField(
                       controller: reasonController,
                       maxLines: 2,
                       decoration: InputDecoration(
-                        labelText: 'Motif clinique / Diagnostic',
-                        hintText: 'Ex: Convalescence post-paludisme fébrile',
+                        hintText: 'Ex: Convalescence justifiant repos médical...',
                         filled: true,
                         fillColor: AppColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
                     ),
                   ],
@@ -174,44 +312,66 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Annuler'),
                 ),
-                ElevatedButton(
+                ElevatedButton.icon(
                   onPressed: () async {
                     final nav = Navigator.of(context);
                     final messenger = ScaffoldMessenger.of(context);
                     nav.pop();
+
+                    final patientTargetName = patientNameController.text.trim().isEmpty
+                        ? 'Kala Pham'
+                        : patientNameController.text.trim();
+
                     final newCert = await _certificateService.issueCertificate({
                       'type': certType,
                       'restDurationDays': restDays,
                       'employerOrInstitution': employerController.text.trim().isEmpty
-                          ? 'Direction RH'
+                          ? 'Direction Générale RH'
                           : employerController.text.trim(),
                       'diagnosisOrReason': reasonController.text.trim().isEmpty
                           ? 'Repos médical justifié'
                           : reasonController.text.trim(),
                       'hospitalName': 'CHU Yalgado Ouédraogo',
                       'doctorName': 'Dr. Amadou Ouédraogo',
-                      'patientName': 'Kaboré Souleymane',
+                      'patientName': patientTargetName,
+                      'startDate': now.toIso8601String(),
+                      'endDate': endDate.toIso8601String(),
                     });
+
                     if (!mounted) return;
                     setState(() {
                       _certificates.insert(0, newCert);
                     });
+
                     messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Certificat officiel émis avec cachet numérique SHA-256 !'),
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: Colors.white),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Certificat envoyé à $patientTargetName ! Le patient a reçu une notification et peut télécharger le document en PDF.',
+                              ),
+                            ),
+                          ],
+                        ),
                         backgroundColor: AppColors.accentGreen,
+                        duration: const Duration(seconds: 4),
                       ),
                     );
                     _showOfficialSealDocument(newCert);
                   },
+                  icon: const Icon(Icons.send_rounded, size: 18),
+                  label: const Text('Envoyer au Patient'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
-                  child: const Text('Émettre avec Sceau'),
                 ),
               ],
             );
@@ -243,6 +403,11 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Émettre un certificat (Espace Praticien)',
+            icon: const Icon(Icons.note_add_rounded, color: AppColors.primary),
+            onPressed: _showNewCertificateDialog,
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
             onPressed: _loadCertificates,
           ),
@@ -252,9 +417,9 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
           ? FloatingActionButton.extended(
               onPressed: _showNewCertificateDialog,
               backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.verified_rounded, color: Colors.white),
+              icon: const Icon(Icons.send_rounded, color: Colors.white),
               label: const Text(
-                'Émettre un certificat',
+                'Émettre & Envoyer',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               ),
             )
@@ -843,16 +1008,10 @@ class _OfficialCertificateModal extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Document PDF certifié avec cachet téléchargé avec succès.'),
-                          backgroundColor: AppColors.accentGreen,
-                        ),
-                      );
+                      _showPdfDownloadDialog(context, cert);
                     },
                     icon: const Icon(Icons.download_rounded, size: 18),
-                    label: const Text('Télécharger PDF'),
+                    label: const Text('Télécharger au format PDF'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -868,6 +1027,160 @@ class _OfficialCertificateModal extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  static void _showPdfDownloadDialog(BuildContext context, MedicalCertificate cert) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetContext) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEE2E2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.picture_as_pdf_rounded,
+                  color: Color(0xFFDC2626),
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Document PDF Officiel Prêt',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${cert.certificateNumber}.pdf',
+                style: const TextStyle(
+                  fontFamily: 'Courier',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Détails du document PDF
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Patient bénéficiaire :', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text(cert.patientName, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Format généré :', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const Text('PDF / A-1b (Archivage légal)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Poids du fichier :', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const Text('142 Ko', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.verified_rounded, size: 14, color: AppColors.accentGreen),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Cachet officiel de ${cert.hospitalName} & Signature inclus.',
+                            style: const TextStyle(fontSize: 11, color: AppColors.accentGreen, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Actions
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(bottomSheetContext);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Document PDF ${cert.certificateNumber}.pdf téléchargé dans vos fichiers !',
+                        ),
+                        backgroundColor: AppColors.accentGreen,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.file_download_done_rounded, color: Colors.white),
+                  label: const Text(
+                    'Enregistrer dans mes Téléchargements',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(bottomSheetContext);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Certificat officiel PDF partagé à l\'employeur (${cert.employerOrInstitution}) !',
+                        ),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.share_rounded, size: 18),
+                  label: const Text('Partager le fichier PDF à mon Employeur'),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
