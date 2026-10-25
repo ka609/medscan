@@ -1,102 +1,90 @@
 import '../core/network/api_client.dart';
+import '../core/utils/id_generator.dart';
 import '../models/message.dart';
 
 class MessageService {
   MessageService({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient.instance;
+      : _apiClient = apiClient ?? ApiClient.instance {
+    _ensureInitialized();
+  }
 
   final ApiClient _apiClient;
 
-  static final List<ClinicalMessage> _inMemoryMessages = [
-    // Messages historiques pré-enregistrés pour M. Kaboré Souleymane (pat-001)
-    ClinicalMessage(
-      id: 'msg-001',
-      conversationId: 'conv-pat-001-doc-001',
-      tenantId: 'ten-001',
-      senderId: 'doc-001',
-      senderName: 'Dr. Amadou Ouédraogo',
-      senderRole: 'DOCTOR',
-      recipientId: 'pat-001',
-      recipientName: 'Kaboré Souleymane',
-      recipientRole: 'PATIENT',
-      patientId: 'pat-001',
-      subject: 'Bilan de consultation',
-      content: 'Bonjour M. Kaboré, vos constantes et votre IMC calculé sont stables. Pensez à renouveler votre ordonnance de bêta-bloquants avant vendredi.',
-      priority: 'ROUTINE',
-      readAt: DateTime.now().subtract(const Duration(hours: 3)),
-      sentAt: DateTime.now().subtract(const Duration(hours: 4)),
-    ),
-    ClinicalMessage(
-      id: 'msg-002',
-      conversationId: 'conv-pat-001-doc-001',
-      tenantId: 'ten-001',
-      senderId: 'pat-001',
-      senderName: 'Kaboré Souleymane',
-      senderRole: 'PATIENT',
-      recipientId: 'doc-001',
-      recipientName: 'Dr. Amadou Ouédraogo',
-      recipientRole: 'DOCTOR',
-      patientId: 'pat-001',
-      subject: 'Re: Bilan de consultation',
-      content: 'Bien reçu Docteur, merci pour le suivi. J\'ai bien récupéré mon certificat médical sur l\'application.',
-      priority: 'ROUTINE',
-      readAt: DateTime.now().subtract(const Duration(hours: 2)),
-      sentAt: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    ClinicalMessage(
-      id: 'msg-003',
-      conversationId: 'conv-pat-001-doc-001',
-      tenantId: 'ten-001',
-      senderId: 'doc-001',
-      senderName: 'Dr. Amadou Ouédraogo',
-      senderRole: 'DOCTOR',
-      recipientId: 'pat-001',
-      recipientName: 'Kaboré Souleymane',
-      recipientRole: 'PATIENT',
-      patientId: 'pat-001',
-      subject: 'Suivi tensionnel',
-      content: 'Parfait. En cas de pic hypertensif (> 140/90 mmHg), signalez-le immédiatement ou lancez une téléconsultation.',
-      priority: 'URGENT',
-      readAt: null,
-      sentAt: DateTime.now().subtract(const Duration(minutes: 35)),
-    ),
-  ];
+  static final List<ClinicalMessage> _inMemoryMessages = [];
+  static final List<ClinicalAlert> _inMemoryAlerts = [];
+  static bool _seeded = false;
 
-  static final List<ClinicalAlert> _inMemoryAlerts = [
-    ClinicalAlert(
-      id: 'alt-001',
-      recipientUserId: 'pat-001',
-      title: 'Alerte Labo : Résultats Biologiques Disponibles',
-      message: 'Vos résultats d\'analyses de glycémie à jeun et d\'ionogramme complet sont validés par le laboratoire central.',
-      type: 'LAB_CRITICAL',
-      severity: 'INFO',
-      timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
-      isRead: false,
-      actionRoute: '/medical-record',
-    ),
-    ClinicalAlert(
-      id: 'alt-002',
-      recipientUserId: 'pat-001',
-      title: 'Rappel de Rendez-vous Médical',
-      message: 'Votre téléconsultation de cardiologie est programmée avec Dr. Amadou Ouédraogo.',
-      type: 'APPOINTMENT',
-      severity: 'INFO',
-      timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-      isRead: true,
-      actionRoute: '/appointments',
-    ),
-    ClinicalAlert(
-      id: 'alt-003',
-      recipientUserId: null, // Alerte générale ou patient connecté
-      title: 'Alerte Constantes : IMC Calculé',
-      message: 'Votre IMC calculé lors du dernier enregistrement est conforme aux normes de santé recommandées.',
-      type: 'VITALS_ALERT',
-      severity: 'INFO',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-      actionRoute: '/medical-record',
-    ),
-  ];
+  static void _ensureInitialized() {
+    if (_seeded) return;
+    _seeded = true;
+
+    final docId = IdGenerator.doctorId();
+    final patientId = IdGenerator.patientId();
+    final tenantId = IdGenerator.tenantId();
+    final convId = IdGenerator.conversationId(patientId, docId);
+
+    _inMemoryMessages.addAll([
+      ClinicalMessage(
+        id: IdGenerator.messageId(),
+        conversationId: convId,
+        tenantId: tenantId,
+        senderId: docId,
+        senderName: 'Dr. Amadou Ouédraogo',
+        senderRole: 'DOCTOR',
+        recipientId: patientId,
+        recipientName: 'Patient Suivi',
+        recipientRole: 'PATIENT',
+        patientId: patientId,
+        subject: 'Bilan de consultation',
+        content: 'Bonjour, vos constantes cliniques et votre bilan sont stables. Pensez à renouveler votre ordonnance avant la fin de semaine.',
+        priority: 'ROUTINE',
+        readAt: DateTime.now().subtract(const Duration(hours: 3)),
+        sentAt: DateTime.now().subtract(const Duration(hours: 4)),
+      ),
+      ClinicalMessage(
+        id: IdGenerator.messageId(),
+        conversationId: convId,
+        tenantId: tenantId,
+        senderId: patientId,
+        senderName: 'Patient Suivi',
+        senderRole: 'PATIENT',
+        recipientId: docId,
+        recipientName: 'Dr. Amadou Ouédraogo',
+        recipientRole: 'DOCTOR',
+        patientId: patientId,
+        subject: 'Re: Bilan de consultation',
+        content: 'Bien reçu Docteur, merci pour le suivi personnalisé.',
+        priority: 'ROUTINE',
+        readAt: DateTime.now().subtract(const Duration(hours: 2)),
+        sentAt: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+    ]);
+
+    _inMemoryAlerts.addAll([
+      ClinicalAlert(
+        id: IdGenerator.alertId(),
+        recipientUserId: patientId,
+        title: 'Alerte Labo : Résultats Biologiques Disponibles',
+        message: 'Vos résultats d\'analyses de glycémie à jeun et d\'ionogramme complet sont validés par le laboratoire central.',
+        type: 'LAB_CRITICAL',
+        severity: 'INFO',
+        timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
+        isRead: false,
+        actionRoute: '/medical-record',
+      ),
+      ClinicalAlert(
+        id: IdGenerator.alertId(),
+        recipientUserId: null, // Alerte générale système
+        title: 'Alerte Constantes : Suivi Recommandé',
+        message: 'Votre suivi de santé régulier est conforme aux recommandations médicales.',
+        type: 'VITALS_ALERT',
+        severity: 'INFO',
+        timestamp: DateTime.now().subtract(const Duration(days: 1)),
+        isRead: true,
+        actionRoute: '/medical-record',
+      ),
+    ]);
+  }
 
   // Récupération isolée des messages par utilisateur
   Future<List<ClinicalMessage>> getMessages({
@@ -104,6 +92,7 @@ class MessageService {
     String? conversationId,
     bool isDoctor = false,
   }) async {
+    _ensureInitialized();
     try {
       final endpoint = conversationId != null
           ? '/v1/messages?conversationId=$conversationId'
@@ -136,14 +125,14 @@ class MessageService {
         // Le patient ne voit STRICTEMENT QUE ses propres messages
         return m.patientId == userId ||
             m.senderId == userId ||
-            m.recipientId == userId ||
-            m.senderId == 'current-user';
+            m.recipientId == userId;
       }
     }).toList();
   }
 
   // Envoi de message isolé dans le fil de la conversation
   Future<ClinicalMessage> sendMessage(Map<String, dynamic> data) async {
+    _ensureInitialized();
     try {
       final response = await _apiClient.post('/v1/messages', data: data);
       if (response.data is Map) {
@@ -157,17 +146,22 @@ class MessageService {
       // Fallback
     }
 
+    final senderId = data['senderId']?.toString() ?? IdGenerator.generate('usr');
+    final recipientId = data['recipientId']?.toString() ?? IdGenerator.doctorId();
+    final conversationId = data['conversationId']?.toString() ??
+        IdGenerator.conversationId(senderId, recipientId);
+
     final newMsg = ClinicalMessage.fromJson({
-      'id': 'msg-${DateTime.now().millisecondsSinceEpoch}',
-      'conversationId': data['conversationId'] ?? 'conv-${data['senderId'] ?? 'user'}-${data['recipientId'] ?? 'peer'}',
-      'tenantId': data['tenantId'] ?? 'ten-001',
-      'senderId': data['senderId'] ?? 'current-user',
+      'id': IdGenerator.messageId(),
+      'conversationId': conversationId,
+      'tenantId': data['tenantId'] ?? IdGenerator.tenantId(),
+      'senderId': senderId,
       'senderName': data['senderName'] ?? 'Vous',
       'senderRole': data['senderRole'] ?? 'PATIENT',
-      'recipientId': data['recipientId'] ?? 'doc-001',
-      'recipientName': data['recipientName'] ?? 'Dr. Amadou Ouédraogo',
+      'recipientId': recipientId,
+      'recipientName': data['recipientName'] ?? 'Médecin Traitant',
       'recipientRole': data['recipientRole'] ?? 'DOCTOR',
-      'patientId': data['patientId'] ?? (data['senderRole'] == 'PATIENT' ? data['senderId'] : data['recipientId']) ?? 'pat-001',
+      'patientId': data['patientId'] ?? (data['senderRole'] == 'PATIENT' ? senderId : recipientId),
       'subject': data['subject'] ?? 'Suivi médical',
       'content': data['content'] ?? '',
       'priority': data['priority'] ?? 'ROUTINE',
@@ -179,11 +173,13 @@ class MessageService {
   }
 
   static void addAlert(ClinicalAlert alert) {
+    _ensureInitialized();
     _inMemoryAlerts.insert(0, alert);
   }
 
   // Récupération isolée des alertes pour un utilisateur donné
   Future<List<ClinicalAlert>> getAlerts({String? userId}) async {
+    _ensureInitialized();
     try {
       final endpoint = userId != null
           ? '/v1/notifications?userId=$userId'

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/id_generator.dart';
 import '../../../models/certificate.dart';
+import '../../../models/user.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/certificate_service.dart';
 
@@ -28,17 +30,11 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
   Future<void> _loadCertificates() async {
     setState(() => _isLoading = true);
     final user = context.read<AuthProvider>().user;
-    final isDoctor = user?.roles.any(
-          (r) =>
-              r.toUpperCase().contains('DOCTOR') ||
-              r.toUpperCase().contains('PRATICIEN') ||
-              r.toUpperCase().contains('MEDECIN'),
-        ) ??
-        false;
+    final isDoctor = user.isDoctor;
 
     final certs = await _certificateService.getCertificates(
-      doctorId: isDoctor ? (user?.id.isNotEmpty == true ? user!.id : 'doc-001') : null,
-      patientId: !isDoctor ? (user?.id.isNotEmpty == true ? user!.id : 'pat-001') : null,
+      doctorId: isDoctor ? (user?.id.isNotEmpty == true ? user!.id : null) : null,
+      patientId: !isDoctor ? (user?.id.isNotEmpty == true ? user!.id : null) : null,
       isDoctor: isDoctor,
     );
 
@@ -58,13 +54,7 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
-    final isDoctor = user?.roles.any(
-          (r) =>
-              r.toUpperCase().contains('DOCTOR') ||
-              r.toUpperCase().contains('PRATICIEN') ||
-              r.toUpperCase().contains('MEDECIN'),
-        ) ??
-        false;
+    final isDoctor = user.isDoctor;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -574,6 +564,11 @@ void showIssueCertificateDialog(
 
                   Navigator.pop(dialogCtx);
 
+                  final user = context.read<AuthProvider>().user;
+                  final doctorDisplayName = user?.displayTitle ?? 'Dr. Praticien';
+                  final doctorId = user?.id.isNotEmpty == true ? user!.id : IdGenerator.doctorId();
+                  final patientId = prefilledPatientId.isNotEmpty ? prefilledPatientId : IdGenerator.patientId();
+
                   final newCert = await CertificateService().issueCertificate({
                     'type': certType,
                     'restDurationDays': restDays,
@@ -584,9 +579,10 @@ void showIssueCertificateDialog(
                         ? 'Repos médical justifié'
                         : reasonController.text.trim(),
                     'hospitalName': 'CHU Yalgado Ouédraogo',
-                    'doctorName': 'Dr. Amadou Ouédraogo',
+                    'doctorId': doctorId,
+                    'doctorName': doctorDisplayName,
                     'patientName': targetName,
-                    'patientId': prefilledPatientId.isNotEmpty ? prefilledPatientId : 'pat-001',
+                    'patientId': patientId,
                     'startDate': now.toIso8601String(),
                     'endDate': endDate.toIso8601String(),
                   });

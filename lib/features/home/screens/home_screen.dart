@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../models/user.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/patient_provider.dart';
 import '../widgets/department_card.dart';
@@ -51,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final userName = user?.displayName.isNotEmpty == true
         ? user!.displayName
         : (user?.username ?? 'Patient');
-    final userRole = user?.roles.isNotEmpty == true ? user!.roles.first : 'PATIENT';
+    final userRole = user?.position ?? (user.isDoctor ? 'Médecin' : 'Patient');
 
     return Scaffold(
       backgroundColor: AppColors.background,

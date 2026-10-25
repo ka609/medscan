@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/id_generator.dart';
+import '../../../models/user.dart';
 import '../../../providers/auth_provider.dart';
 
 class TeleconsultScreen extends StatefulWidget {
@@ -136,32 +138,23 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
-    final isDoctor = user?.roles.any(
-          (r) =>
-              r.toUpperCase().contains('DOCTOR') ||
-              r.toUpperCase().contains('PRATICIEN') ||
-              r.toUpperCase().contains('MEDECIN'),
-        ) ??
-        false;
+    final isDoctor = user.isDoctor;
 
     final currentUserName = user?.displayName.isNotEmpty == true
         ? user!.displayName
         : (user?.username.isNotEmpty == true
             ? user!.username
-            : (isDoctor ? 'Dr. Praticien' : 'Patient'));
+            : (isDoctor ? (user?.displayTitle ?? 'Praticien') : 'Patient'));
 
     final remoteName = isDoctor
-        ? 'Patient Connecté (M. Kaboré)'
+        ? 'Patient Connecté'
         : 'Dr. Amadou Ouédraogo';
 
     final remoteSubtitle = isDoctor
         ? 'Dossier Médical Isolé • Salle Privée'
         : 'Cardiologue • CHU Yalgado Ouédraogo';
 
-    final roomCode = (user?.id.isNotEmpty == true ? user!.id : 'call-01')
-        .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')
-        .padRight(6, '0')
-        .substring(0, 6);
+    final roomCode = IdGenerator.roomCode(user?.id);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),

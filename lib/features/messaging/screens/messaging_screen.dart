@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/id_generator.dart';
 import '../../../models/message.dart';
+import '../../../models/user.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/message_service.dart';
 
@@ -34,14 +36,8 @@ class _MessagingScreenState extends State<MessagingScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final user = context.read<AuthProvider>().user;
-    final isDoctor = user?.roles.any(
-          (r) =>
-              r.toUpperCase().contains('DOCTOR') ||
-              r.toUpperCase().contains('PRATICIEN') ||
-              r.toUpperCase().contains('MEDECIN'),
-        ) ??
-        false;
-    final userId = user?.id.isNotEmpty == true ? user!.id : 'pat-001';
+    final isDoctor = user.isDoctor;
+    final userId = user?.id.isNotEmpty == true ? user!.id : '';
 
     final msgs = await _messageService.getMessages(
       userId: userId,
@@ -63,30 +59,27 @@ class _MessagingScreenState extends State<MessagingScreen> {
     if (text.isEmpty) return;
 
     final user = context.read<AuthProvider>().user;
-    final isDoctor = user?.roles.any(
-          (r) =>
-              r.toUpperCase().contains('DOCTOR') ||
-              r.toUpperCase().contains('PRATICIEN') ||
-              r.toUpperCase().contains('MEDECIN'),
-        ) ??
-        false;
-    final userId = user?.id.isNotEmpty == true ? user!.id : 'pat-001';
+    final isDoctor = user.isDoctor;
+    final userId = user?.id.isNotEmpty == true ? user!.id : IdGenerator.patientId();
     final userName = user?.displayName.isNotEmpty == true
         ? user!.displayName
-        : (user?.username.isNotEmpty == true ? user!.username : (isDoctor ? 'Dr. Praticien' : 'Patient'));
+        : (user?.username.isNotEmpty == true ? user!.username : (isDoctor ? (user?.displayTitle ?? 'Praticien') : 'Patient'));
 
     _messageInputController.clear();
+
+    final recipientId = isDoctor ? IdGenerator.patientId() : IdGenerator.doctorId();
+    final conversationId = IdGenerator.conversationId(userId, recipientId);
 
     final newMsg = await _messageService.sendMessage({
       'content': text,
       'senderId': userId,
-      'senderName': isDoctor ? 'Dr. $userName' : userName,
+      'senderName': isDoctor ? (user?.displayTitle ?? 'Dr. $userName') : userName,
       'senderRole': isDoctor ? 'DOCTOR' : 'PATIENT',
-      'recipientId': isDoctor ? 'pat-001' : 'doc-001',
-      'recipientName': isDoctor ? 'M. Kaboré Souleymane' : 'Dr. Amadou Ouédraogo',
+      'recipientId': recipientId,
+      'recipientName': isDoctor ? 'Patient Suivi' : 'Dr. Amadou Ouédraogo',
       'recipientRole': isDoctor ? 'PATIENT' : 'DOCTOR',
-      'patientId': isDoctor ? 'pat-001' : userId,
-      'conversationId': 'conv-$userId',
+      'patientId': isDoctor ? recipientId : userId,
+      'conversationId': conversationId,
     });
 
     if (mounted) {
@@ -110,13 +103,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
-    final isDoctor = user?.roles.any(
-          (r) =>
-              r.toUpperCase().contains('DOCTOR') ||
-              r.toUpperCase().contains('PRATICIEN') ||
-              r.toUpperCase().contains('MEDECIN'),
-        ) ??
-        false;
+    final isDoctor = user.isDoctor;
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -1,16 +1,79 @@
 import '../core/network/api_client.dart';
+import '../core/utils/id_generator.dart';
 import '../models/grievance.dart';
 
 class GrievanceService {
   GrievanceService({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient.instance;
+      : _apiClient = apiClient ?? ApiClient.instance {
+    _ensureInitialized();
+  }
 
   final ApiClient _apiClient;
 
-  Future<List<PatientGrievance>> getGrievances({String? tenantId}) async {
+  static final List<PatientGrievance> _inMemoryGrievances = [];
+  static bool _seeded = false;
+
+  static void _ensureInitialized() {
+    if (_seeded) return;
+    _seeded = true;
+
+    final patientId = IdGenerator.patientId();
+    final doc1Id = IdGenerator.doctorId();
+    final doc2Id = IdGenerator.doctorId();
+    final tenantId = IdGenerator.tenantId();
+
+    _inMemoryGrievances.addAll([
+      PatientGrievance(
+        id: IdGenerator.grievanceId(),
+        grievanceCode: 'REC-${DateTime.now().year}-0012',
+        patientId: patientId,
+        patientName: 'Patient Suivi',
+        patientPhone: '+226 70 12 34 56',
+        doctorId: doc1Id,
+        doctorName: 'Dr. Fatimata Sawadogo',
+        tenantId: tenantId,
+        hospitalName: 'CHU Yalgado Ouédraogo',
+        grievanceType: 'FEEDBACK',
+        category: 'CARE_QUALITY',
+        rating: 5,
+        severity: 'LOW',
+        title: 'Excellente prise en charge en cardiologie',
+        description: 'Praticien très à l\'écoute, explications claires sur la posologie et respect parfait des horaires de consultation.',
+        status: 'RESOLVED',
+        adminNotes: 'Avis positif transmis pour valorisation du praticien.',
+        adminActionTaken: 'Transmission au registre de valorisation.',
+        reviewedByAdminName: 'Direction Médicale',
+        reviewedAt: DateTime.now().subtract(const Duration(days: 3)),
+        createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      ),
+      PatientGrievance(
+        id: IdGenerator.grievanceId(),
+        grievanceCode: 'REC-${DateTime.now().year}-0019',
+        patientId: patientId,
+        patientName: 'Patient Suivi',
+        patientPhone: '+226 70 12 34 56',
+        doctorId: doc2Id,
+        doctorName: 'Dr. Ibrahim Traoré',
+        tenantId: tenantId,
+        hospitalName: 'CHU Yalgado Ouédraogo',
+        grievanceType: 'COMPLAINT',
+        category: 'DELAY_WAIT_TIME',
+        rating: 2,
+        severity: 'MEDIUM',
+        title: 'Délai d\'attente en salle avant consultation',
+        description: 'Plus d\'une heure d\'attente avant d\'être reçu malgré la réservation confirmée.',
+        status: 'UNDER_REVIEW',
+        adminNotes: 'Régulation en cours avec le bureau des admissions.',
+        createdAt: DateTime.now().subtract(const Duration(hours: 18)),
+      ),
+    ]);
+  }
+
+  Future<List<PatientGrievance>> getGrievances({String? patientId}) async {
+    _ensureInitialized();
     try {
-      final endpoint = tenantId != null
-          ? '/v1/grievances?tenantId=$tenantId'
+      final endpoint = patientId != null
+          ? '/v1/grievances?patientId=$patientId'
           : '/v1/grievances';
       final response = await _apiClient.get(endpoint);
 
@@ -21,33 +84,39 @@ class GrievanceService {
             .toList();
       }
     } catch (_) {
-      // Fallback
+      // Fallback gracieux
     }
 
-    return _getDemoGrievances();
+    if (patientId != null && patientId.isNotEmpty) {
+      return _inMemoryGrievances.where((g) => g.patientId == patientId).toList();
+    }
+    return List<PatientGrievance>.from(_inMemoryGrievances);
   }
 
   Future<PatientGrievance> submitGrievance(Map<String, dynamic> data) async {
+    _ensureInitialized();
     try {
       final response = await _apiClient.post('/v1/grievances', data: data);
       if (response.data is Map) {
-        return PatientGrievance.fromJson(
+        final serverGrievance = PatientGrievance.fromJson(
           Map<String, dynamic>.from(response.data as Map),
         );
+        _inMemoryGrievances.insert(0, serverGrievance);
+        return serverGrievance;
       }
     } catch (_) {
-      // Fallback
+      // Fallback local
     }
 
-    return PatientGrievance.fromJson({
-      'id': 'grv-${DateTime.now().millisecondsSinceEpoch}',
+    final newGrievance = PatientGrievance.fromJson({
+      'id': IdGenerator.grievanceId(),
       'grievanceCode': 'REC-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
-      'patientId': data['patientId'] ?? 'pat-001',
-      'patientName': data['patientName'] ?? 'Kaboré Souleymane',
+      'patientId': data['patientId'] ?? IdGenerator.patientId(),
+      'patientName': data['patientName'] ?? 'Patient',
       'patientPhone': data['patientPhone'] ?? '+226 70 00 00 00',
-      'doctorId': data['doctorId'] ?? 'doc-001',
-      'doctorName': data['doctorName'] ?? 'Dr. Amadou Ouédraogo',
-      'tenantId': data['tenantId'] ?? 'ten-001',
+      'doctorId': data['doctorId'] ?? IdGenerator.doctorId(),
+      'doctorName': data['doctorName'] ?? 'Dr. Praticien',
+      'tenantId': data['tenantId'] ?? IdGenerator.tenantId(),
       'hospitalName': data['hospitalName'] ?? 'CHU Yalgado Ouédraogo',
       'consultationId': data['consultationId'],
       'grievanceType': data['grievanceType'] ?? 'COMPLAINT',
@@ -59,57 +128,8 @@ class GrievanceService {
       'status': 'SUBMITTED',
       'createdAt': DateTime.now().toIso8601String(),
     });
-  }
 
-  List<PatientGrievance> _getDemoGrievances() {
-    return [
-      PatientGrievance(
-        id: 'grv-001',
-        grievanceCode: 'REC-2026-0012',
-        patientId: 'pat-001',
-        patientName: 'Kaboré Souleymane',
-        patientPhone: '+226 70 12 34 56',
-        doctorId: 'doc-002',
-        doctorName: 'Dr. Fatimata Sawadogo',
-        tenantId: 'ten-001',
-        hospitalName: 'CHU Yalgado Ouédraogo',
-        grievanceType: 'FEEDBACK',
-        category: 'CARE_QUALITY',
-        rating: 5,
-        severity: 'LOW',
-        title: 'Excellente prise en charge en cardiologie',
-        description: 'Médecin très à l\'écoute, explications claires sur la posologie et respect parfait des horaires de consultation.',
-        status: 'RESOLVED',
-        adminNotes: 'Avis positif transmis au chef de service pour félicitations au praticien.',
-        adminActionTaken: 'Transmission au registre de valorisation de l\'équipe médicale.',
-        reviewedByAdminName: 'Directeur Général de l\'Hôpital',
-        reviewedAt: DateTime.now().subtract(const Duration(days: 3)),
-        createdAt: DateTime.now().subtract(const Duration(days: 4)),
-      ),
-      PatientGrievance(
-        id: 'grv-002',
-        grievanceCode: 'REC-2026-0019',
-        patientId: 'pat-001',
-        patientName: 'Kaboré Souleymane',
-        patientPhone: '+226 70 12 34 56',
-        doctorId: 'doc-005',
-        doctorName: 'Dr. Ibrahim Traoré',
-        tenantId: 'ten-001',
-        hospitalName: 'CHU Yalgado Ouédraogo',
-        grievanceType: 'COMPLAINT',
-        category: 'DELAY_WAIT_TIME',
-        rating: 2,
-        severity: 'MEDIUM',
-        title: 'Attente de plus de 2 heures sans information au guichet',
-        description: 'Rendez-vous fixé à 09h00, passage effectif à 11h15 sans explication de l\'accueil sur le retard.',
-        status: 'UNDER_REVIEW',
-        adminNotes: 'Instruction en cours auprès du secrétariat médical pour révision du cadencement des flux.',
-        adminActionTaken: 'Sensibilisation de l\'équipe d\'accueil à la communication préventive.',
-        reviewedByAdminName: 'Directeur Qualité & Relation Usagers',
-        reviewedAt: DateTime.now().subtract(const Duration(days: 1)),
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-    ];
+    _inMemoryGrievances.insert(0, newGrievance);
+    return newGrievance;
   }
 }
-

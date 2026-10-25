@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medscan/core/theme/app_colors.dart';
+import 'package:medscan/core/utils/id_generator.dart';
 import 'package:medscan/models/certificate.dart';
 import 'package:medscan/models/grievance.dart';
 import 'package:medscan/models/message.dart';
 import 'package:medscan/models/patient.dart';
 import 'package:medscan/models/referral.dart';
+import 'package:medscan/models/user.dart';
 import 'package:medscan/services/message_service.dart';
 
 void main() {
@@ -14,6 +16,67 @@ void main() {
       expect(AppColors.background.toARGB32(), 0xFFF7F9FC);
       expect(AppColors.surface.toARGB32(), 0xFFFFFFFF);
       expect(AppColors.starGold.toARGB32(), 0xFFF59E0B);
+    });
+  });
+
+  group('IdGenerator (Zéro ID codé en dur)', () {
+    test('Generates dynamic, unique IDs with proper prefixes', () {
+      final patId1 = IdGenerator.patientId();
+      final patId2 = IdGenerator.patientId();
+      expect(patId1, startsWith('pat_'));
+      expect(patId2, startsWith('pat_'));
+      expect(patId1, isNot(equals(patId2)));
+
+      final docId = IdGenerator.doctorId();
+      expect(docId, startsWith('doc_'));
+
+      final certCode = IdGenerator.certificateCode();
+      expect(certCode, startsWith('CERT-'));
+
+      final convId = IdGenerator.conversationId(patId1, docId);
+      expect(convId, startsWith('conv_'));
+    });
+  });
+
+  group('User & Modular Medical Position', () {
+    test('Identifies doctor via position or roles without hardcoded strings', () {
+      final practitioner = User(
+        id: IdGenerator.doctorId(),
+        username: 'dr_ouedraogo',
+        email: 'amadou@chu.bf',
+        displayName: 'Amadou Ouédraogo',
+        tenantId: IdGenerator.tenantId(),
+        tenantCode: 'CHU-YO',
+        roles: const ['USER'],
+        permissions: const [],
+        position: 'Praticien Hospitalier',
+      );
+      expect(practitioner.isDoctor, isTrue);
+      expect(practitioner.isPatient, isFalse);
+      expect(practitioner.displayTitle, 'Praticien Hospitalier Amadou Ouédraogo');
+
+      final patient = User(
+        id: IdGenerator.patientId(),
+        username: 'souleymane',
+        email: 'kabore@gmail.com',
+        displayName: 'Kaboré Souleymane',
+        tenantId: IdGenerator.tenantId(),
+        tenantCode: 'CHU-YO',
+        roles: const ['ROLE_PATIENT'],
+        permissions: const [],
+      );
+      expect(patient.isDoctor, isFalse);
+      expect(patient.isPatient, isTrue);
+      expect(patient.displayTitle, 'Kaboré Souleymane');
+    });
+
+    test('MedicalPosition enum helper returns correct labels and codes', () {
+      final pos = MedicalPosition.fromString('PRATICIEN');
+      expect(pos, equals(MedicalPosition.practitioner));
+      expect(pos?.label, 'Praticien Hospitalier');
+
+      final med = MedicalPosition.fromString('MEDECIN');
+      expect(med, equals(MedicalPosition.physician));
     });
   });
 
@@ -32,8 +95,8 @@ void main() {
   group('MedicalCertificate', () {
     test('MedicalCertificate deserialization and type labels', () {
       final cert = MedicalCertificate.fromJson({
-        'id': 'cert-1',
-        'certificateNumber': 'CERT-2026-001',
+        'id': IdGenerator.certificateId(),
+        'certificateNumber': IdGenerator.certificateCode(),
         'type': 'SICK_LEAVE',
         'patientName': 'Kaboré Souleymane',
         'doctorName': 'Dr. Amadou Ouédraogo',
@@ -41,7 +104,7 @@ void main() {
         'digitalSealHash': 'SHA256:abcd1234',
       });
 
-      expect(cert.certificateNumber, 'CERT-2026-001');
+      expect(cert.certificateNumber, startsWith('CERT-'));
       expect(cert.restDurationDays, 5);
       expect(cert.typeLabel, 'Arrêt de Travail Médical (Employeur)');
       expect(cert.digitalSealHash, 'SHA256:abcd1234');
@@ -51,7 +114,7 @@ void main() {
   group('MedicalReferral', () {
     test('MedicalReferral deserialization and priority tracking', () {
       final ref = MedicalReferral.fromJson({
-        'id': 'ref-1',
+        'id': IdGenerator.referralId(),
         'referralCode': 'REF-2026-0891',
         'patientName': 'Kaboré Souleymane',
         'referringDoctorName': 'Dr. Amadou Ouédraogo',
@@ -73,7 +136,7 @@ void main() {
   group('PatientGrievance', () {
     test('PatientGrievance deserialization and status tracking', () {
       final grv = PatientGrievance.fromJson({
-        'id': 'grv-1',
+        'id': IdGenerator.grievanceId(),
         'grievanceCode': 'REC-2026-001',
         'patientName': 'Kaboré Souleymane',
         'doctorName': 'Dr. Amadou Ouédraogo',
@@ -96,7 +159,7 @@ void main() {
   group('ClinicalMessage & Alert', () {
     test('ClinicalMessage urgent flag detection', () {
       final msg = ClinicalMessage.fromJson({
-        'id': 'msg-1',
+        'id': IdGenerator.messageId(),
         'conversationId': 'conv-1',
         'senderName': 'Dr. Amadou Ouédraogo',
         'content': 'Prenez contact avec les urgences',
@@ -106,7 +169,7 @@ void main() {
       expect(msg.isUrgent, isTrue);
 
       final routineMsg = ClinicalMessage.fromJson({
-        'id': 'msg-2',
+        'id': IdGenerator.messageId(),
         'conversationId': 'conv-1',
         'senderName': 'Dr. Amadou Ouédraogo',
         'content': 'Ordonnance renouvelée',
@@ -116,28 +179,50 @@ void main() {
       expect(routineMsg.isUrgent, isFalse);
     });
 
-    test('MessageService isolates messages per user', () async {
+    test('MessageService dynamically isolates messages per user session', () async {
       final msgService = MessageService();
 
-      // M. Kaboré Souleymane (pat-001)
-      final user1Msgs = await msgService.getMessages(userId: 'pat-001');
-      expect(user1Msgs.isNotEmpty, isTrue);
-      expect(user1Msgs.every((m) => m.patientId == 'pat-001' || m.senderId == 'pat-001' || m.recipientId == 'pat-001'), isTrue);
+      // Utilisateur A envoie un message
+      final userAId = IdGenerator.patientId();
+      final doctorId = IdGenerator.doctorId();
+      await msgService.sendMessage({
+        'senderId': userAId,
+        'recipientId': doctorId,
+        'patientId': userAId,
+        'content': 'Message privé de User A',
+      });
 
-      // Nouvel utilisateur sans messages
-      final user2Msgs = await msgService.getMessages(userId: 'pat-unknown-999');
-      expect(user2Msgs.isEmpty, isTrue);
+      final userAMsgs = await msgService.getMessages(userId: userAId);
+      expect(userAMsgs.isNotEmpty, isTrue);
+      expect(userAMsgs.every((m) => m.senderId == userAId || m.recipientId == userAId || m.patientId == userAId), isTrue);
+
+      // Utilisateur B isolé ne reçoit pas les messages de User A
+      final userBId = IdGenerator.patientId();
+      final userBMsgs = await msgService.getMessages(userId: userBId);
+      expect(userBMsgs.isEmpty, isTrue);
     });
 
-    test('MessageService isolates clinical alerts per user', () async {
+    test('MessageService isolates clinical alerts per user without data leak', () async {
       final msgService = MessageService();
+      final targetPatientId = IdGenerator.patientId();
 
-      final user1Alerts = await msgService.getAlerts(userId: 'pat-001');
-      expect(user1Alerts.isNotEmpty, isTrue);
+      MessageService.addAlert(
+        ClinicalAlert(
+          id: IdGenerator.alertId(),
+          recipientUserId: targetPatientId,
+          title: 'Résultats Confidentiels',
+          message: 'Bilan réservé au patient',
+          type: 'LAB_CRITICAL',
+          severity: 'INFO',
+          timestamp: DateTime.now(),
+        ),
+      );
 
-      final otherUserAlerts = await msgService.getAlerts(userId: 'pat-isolated-user');
-      // L'utilisateur isolé ne reçoit pas les alertes privées de pat-001
-      expect(otherUserAlerts.any((a) => a.recipientUserId == 'pat-001'), isFalse);
+      final patientAlerts = await msgService.getAlerts(userId: targetPatientId);
+      expect(patientAlerts.any((a) => a.recipientUserId == targetPatientId), isTrue);
+
+      final anotherUserAlerts = await msgService.getAlerts(userId: IdGenerator.patientId());
+      expect(anotherUserAlerts.any((a) => a.recipientUserId == targetPatientId), isFalse);
     });
   });
 }

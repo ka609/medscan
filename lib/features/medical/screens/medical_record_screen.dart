@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../models/certificate.dart';
+import '../../../models/user.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/patient_provider.dart';
 import '../../../services/certificate_service.dart';
@@ -1019,13 +1020,7 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final user = context.watch<AuthProvider>().user;
-    final isDoctor = user?.roles.any(
-          (r) =>
-              r.toUpperCase().contains('DOCTOR') ||
-              r.toUpperCase().contains('PRATICIEN') ||
-              r.toUpperCase().contains('MEDECIN'),
-        ) ??
-        false;
+    final isDoctor = user.isDoctor;
 
     return _SectionCard(
       title: 'Certificats Médicaux',
