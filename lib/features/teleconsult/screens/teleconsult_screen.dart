@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../providers/auth_provider.dart';
 
 class TeleconsultScreen extends StatefulWidget {
   const TeleconsultScreen({super.key});
@@ -42,7 +44,7 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
     return '$minutes:$seconds';
   }
 
-  void _showConsultationNotes() {
+  void _showConsultationNotes(bool isDoctor, String currentUserName) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -81,23 +83,29 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Session Jitsi chiffrée de bout en bout conforme HDS.',
-                        style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+                        'Session Jitsi chiffrée de bout en bout conforme HDS (Canal isolé).',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 14),
-              const Text(
-                'Prescription électronique en cours de saisie par le Dr. Amadou Ouédraogo.',
-                style: TextStyle(fontSize: 13, color: AppColors.textPrimary),
+              Text(
+                isDoctor
+                    ? 'Session active avec le patient connecté. Les données saisies sont scellées dans le dossier médical.'
+                    : 'Téléconsultation en cours avec votre médecin référant.',
+                style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 10),
               const Text(
-                '• Constantes de la session : Tension 125/80 mmHg, IMC 24.2 kg/m²\n'
-                '• Recommandation : Maintien du traitement hypotenseur et repos.',
-                style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.4),
+                '• Paramètres cliniques : Session HD chiffrée WebRTC\n'
+                '• Données de santé : Ségrégation stricte des flux audio/vidéo.',
+                style: TextStyle(
+                    fontSize: 12.5, color: AppColors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 18),
               SizedBox(
@@ -108,7 +116,7 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                     context.push(AppRoutes.prescriptions);
                   },
                   icon: const Icon(Icons.medication_rounded, size: 18),
-                  label: const Text('Voir l\'ordonnance émise'),
+                  label: const Text('Consulter les ordonnances'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -127,12 +135,40 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final isDoctor = user?.roles.any(
+          (r) =>
+              r.toUpperCase().contains('DOCTOR') ||
+              r.toUpperCase().contains('PRATICIEN') ||
+              r.toUpperCase().contains('MEDECIN'),
+        ) ??
+        false;
+
+    final currentUserName = user?.displayName.isNotEmpty == true
+        ? user!.displayName
+        : (user?.username.isNotEmpty == true
+            ? user!.username
+            : (isDoctor ? 'Dr. Praticien' : 'Patient'));
+
+    final remoteName = isDoctor
+        ? 'Patient Connecté (M. Kaboré)'
+        : 'Dr. Amadou Ouédraogo';
+
+    final remoteSubtitle = isDoctor
+        ? 'Dossier Médical Isolé • Salle Privée'
+        : 'Cardiologue • CHU Yalgado Ouédraogo';
+
+    final roomCode = (user?.id.isNotEmpty == true ? user!.id : 'call-01')
+        .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')
+        .padRight(6, '0')
+        .substring(0, 6);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       body: SafeArea(
         child: Stack(
           children: [
-            // 1. Flux vidéo principal du Médecin (simulation avec superposition clinique)
+            // 1. Flux vidéo distant (simulation avec superposition clinique)
             Positioned.fill(
               child: Container(
                 decoration: const BoxDecoration(
@@ -141,7 +177,6 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Arrière-plan stylisé de flux vidéo
                     Container(
                       width: double.infinity,
                       height: double.infinity,
@@ -158,29 +193,29 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                           CircleAvatar(
                             radius: 54,
                             backgroundColor: AppColors.primary.withValues(alpha: 0.3),
-                            child: const CircleAvatar(
+                            child: CircleAvatar(
                               radius: 46,
                               backgroundColor: AppColors.primary,
                               child: Icon(
-                                Icons.person,
+                                isDoctor ? Icons.person_rounded : Icons.medical_services_rounded,
                                 size: 50,
                                 color: Colors.white,
                               ),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'Dr. Amadou Ouédraogo',
-                            style: TextStyle(
+                          Text(
+                            remoteName,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Cardiologue • CHU Yalgado Ouédraogo',
-                            style: TextStyle(
+                          Text(
+                            remoteSubtitle,
+                            style: const TextStyle(
                               color: Color(0xFF94A3B8),
                               fontSize: 14,
                             ),
@@ -192,14 +227,14 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                               color: Colors.white.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.circle, color: Color(0xFF22C55E), size: 8),
-                                SizedBox(width: 6),
+                                const Icon(Icons.circle, color: Color(0xFF22C55E), size: 8),
+                                const SizedBox(width: 6),
                                 Text(
-                                  'Connexion HD 1080p active',
-                                  style: TextStyle(color: Colors.white, fontSize: 11.5),
+                                  'Salle isolée : #medscan-$roomCode • HD 1080p',
+                                  style: const TextStyle(color: Colors.white, fontSize: 11.5),
                                 ),
                               ],
                             ),
@@ -212,7 +247,7 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
               ),
             ),
 
-            // 2. Barre supérieure : Retour, Durée, Badge Sécurité
+            // 2. Barre supérieure : Retour, Durée, Notes
             Positioned(
               top: 16,
               left: 16,
@@ -254,20 +289,20 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                     backgroundColor: Colors.black.withValues(alpha: 0.40),
                     child: IconButton(
                       icon: const Icon(Icons.notes_rounded, color: Colors.white),
-                      onPressed: _showConsultationNotes,
+                      onPressed: () => _showConsultationNotes(isDoctor, currentUserName),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // 3. Vignette PIP (Self-camera du patient)
+            // 3. Vignette PIP (Self-camera)
             Positioned(
               bottom: 120,
               right: 20,
               child: Container(
-                width: 100,
-                height: 140,
+                width: 105,
+                height: 145,
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E293B),
                   borderRadius: BorderRadius.circular(16),
@@ -293,14 +328,23 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                                 child: Icon(Icons.person, color: Colors.white70, size: 40),
                               ),
                             ),
-                      const Positioned(
+                      Positioned(
                         bottom: 6,
-                        child: Text(
-                          'Vous',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            isDoctor ? 'Dr. $currentUserName' : currentUserName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
@@ -376,7 +420,7 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
                     _buildActionButton(
                       icon: Icons.medical_services_rounded,
                       isActive: true,
-                      onTap: _showConsultationNotes,
+                      onTap: () => _showConsultationNotes(isDoctor, currentUserName),
                     ),
                   ],
                 ),
@@ -413,4 +457,3 @@ class _TeleconsultScreenState extends State<TeleconsultScreen> {
     );
   }
 }
-

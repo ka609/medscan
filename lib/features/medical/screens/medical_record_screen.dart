@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../models/certificate.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/patient_provider.dart';
+import '../../../services/certificate_service.dart';
+import '../../certificates/screens/certificates_screen.dart';
 
 class MedicalRecordScreen extends StatefulWidget {
   const MedicalRecordScreen({super.key});
@@ -71,6 +75,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
               _VitalsSection(vitals: vitals),
               _ConsultationsSection(items: consultations),
               _PrescriptionsSection(items: prescriptions),
+              _CertificatesSection(patient: patient),
               const SizedBox(height: 16),
             ],
           ),
@@ -968,6 +973,245 @@ class _PrescriptionCard extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// Section Certificats Médicaux Officiels
+class _CertificatesSection extends StatefulWidget {
+  final Map<String, dynamic> patient;
+
+  const _CertificatesSection({required this.patient});
+
+  @override
+  State<_CertificatesSection> createState() => _CertificatesSectionState();
+}
+
+class _CertificatesSectionState extends State<_CertificatesSection> {
+  final CertificateService _certificateService = CertificateService();
+  List<MedicalCertificate> _certificates = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCertificates();
+  }
+
+  Future<void> _loadCertificates() async {
+    setState(() => _isLoading = true);
+    final patientId = widget.patient['id']?.toString() ??
+        widget.patient['fullName']?.toString();
+    final certs = await _certificateService.getCertificates(
+      patientId: patientId,
+    );
+    if (mounted) {
+      setState(() {
+        _certificates = certs;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final user = context.watch<AuthProvider>().user;
+    final isDoctor = user?.roles.any(
+          (r) =>
+              r.toUpperCase().contains('DOCTOR') ||
+              r.toUpperCase().contains('PRATICIEN') ||
+              r.toUpperCase().contains('MEDECIN'),
+        ) ??
+        false;
+
+    return _SectionCard(
+      title: 'Certificats Médicaux',
+      icon: Icons.verified_user_outlined,
+      count: _certificates.isEmpty ? null : _certificates.length,
+      child: _isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(12),
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_certificates.isEmpty) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: _EmptyLine('Aucun certificat médical enregistré pour ce patient.'),
+                  ),
+                  if (isDoctor) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          showIssueCertificateDialog(
+                            context,
+                            initialPatient: widget.patient,
+                            onCertificateIssued: (newCert) {
+                              _loadCertificates();
+                            },
+                          );
+                        },
+                        icon: const Icon(Icons.post_add_rounded, size: 18),
+                        label: const Text('Émettre un certificat pour ce patient'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: cs.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ] else ...[
+                  for (final cert in _certificates)
+                    _PatientDossierCertificateCard(
+                      cert: cert,
+                      isDoctor: isDoctor,
+                      onView: () {
+                        showOfficialCertificateModal(
+                          context,
+                          cert,
+                          isDoctor: isDoctor,
+                        );
+                      },
+                    ),
+                  if (isDoctor) ...[
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          showIssueCertificateDialog(
+                            context,
+                            initialPatient: widget.patient,
+                            onCertificateIssued: (newCert) {
+                              _loadCertificates();
+                            },
+                          );
+                        },
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('Ajouter un certificat pour ce patient'),
+                      ),
+                    ),
+                  ],
+                ],
+              ],
+            ),
+    );
+  }
+}
+
+class _PatientDossierCertificateCard extends StatelessWidget {
+  final MedicalCertificate cert;
+  final bool isDoctor;
+  final VoidCallback onView;
+
+  const _PatientDossierCertificateCard({
+    required this.cert,
+    required this.isDoctor,
+    required this.onView,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  cert.typeLabel,
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+              _Pill(
+                cert.certificateNumber,
+                color: cs.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${_date(cert.startDate)} au ${_date(cert.endDate)} • ${cert.restDurationDays} jour(s) de repos',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            cert.diagnosisOrReason,
+            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Délivré par ${cert.doctorName} • ${cert.hospitalName}',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 10),
+          Divider(height: 1, color: cs.outlineVariant),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.shield_rounded, size: 16, color: Colors.green.shade700),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Cachet officiel scellé',
+                    style: tt.labelSmall?.copyWith(
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              ElevatedButton.icon(
+                onPressed: onView,
+                icon: Icon(
+                  isDoctor ? Icons.visibility_rounded : Icons.file_download_outlined,
+                  size: 15,
+                ),
+                label: Text(
+                  isDoctor ? 'Consulter' : 'Voir & PDF',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary.withAlpha(25),
+                  foregroundColor: cs.primary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

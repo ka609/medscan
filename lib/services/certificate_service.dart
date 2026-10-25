@@ -54,12 +54,18 @@ class CertificateService {
     ),
   ];
 
-  // Récupérer les certificats médicaux
-  Future<List<MedicalCertificate>> getCertificates({String? patientId}) async {
+  // Récupérer les certificats médicaux (filtrés selon patient ou médecin émetteur)
+  Future<List<MedicalCertificate>> getCertificates({
+    String? patientId,
+    String? doctorId,
+    bool isDoctor = false,
+  }) async {
     try {
       final endpoint = patientId != null
           ? '/v1/certificates?patientId=$patientId'
-          : '/v1/certificates';
+          : (doctorId != null
+              ? '/v1/certificates?doctorId=$doctorId'
+              : '/v1/certificates');
       final response = await _apiClient.get(endpoint);
 
       if (response.data is List) {
@@ -72,10 +78,20 @@ class CertificateService {
       // Fallback
     }
 
-    return List<MedicalCertificate>.from(_inMemoryCertificates);
+    return _inMemoryCertificates.where((cert) {
+      if (patientId != null && patientId.isNotEmpty) {
+        return cert.patientId == patientId ||
+            cert.patientName.toLowerCase().trim() == patientId.toLowerCase().trim();
+      }
+      if (isDoctor && doctorId != null && doctorId.isNotEmpty) {
+        return cert.doctorId == doctorId ||
+            cert.doctorName.toLowerCase().contains(doctorId.toLowerCase());
+      }
+      return true;
+    }).toList();
   }
 
-  // Émettre et transmettre un certificat officiel au patient
+  // Émettre et sceller un certificat officiel transmis au patient
   Future<MedicalCertificate> issueCertificate(Map<String, dynamic> data) async {
     try {
       final response = await _apiClient.post('/v1/certificates', data: data);
@@ -130,6 +146,7 @@ class CertificateService {
     MessageService.addAlert(
       ClinicalAlert(
         id: 'alt-cert-${cert.id}',
+        recipientUserId: cert.patientId,
         title: 'Nouveau Certificat Médical (${cert.typeLabel})',
         message: 'Le ${cert.doctorName} vous a délivré un certificat officiel avec cachet de l\'hôpital pour une durée de ${cert.restDurationDays} jour(s). Prêt au téléchargement PDF.',
         type: 'CERTIFICATE',

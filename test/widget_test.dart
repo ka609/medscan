@@ -5,6 +5,7 @@ import 'package:medscan/models/grievance.dart';
 import 'package:medscan/models/message.dart';
 import 'package:medscan/models/patient.dart';
 import 'package:medscan/models/referral.dart';
+import 'package:medscan/services/message_service.dart';
 
 void main() {
   group('Theme & Design System', () {
@@ -113,6 +114,30 @@ void main() {
       });
 
       expect(routineMsg.isUrgent, isFalse);
+    });
+
+    test('MessageService isolates messages per user', () async {
+      final msgService = MessageService();
+
+      // M. Kaboré Souleymane (pat-001)
+      final user1Msgs = await msgService.getMessages(userId: 'pat-001');
+      expect(user1Msgs.isNotEmpty, isTrue);
+      expect(user1Msgs.every((m) => m.patientId == 'pat-001' || m.senderId == 'pat-001' || m.recipientId == 'pat-001'), isTrue);
+
+      // Nouvel utilisateur sans messages
+      final user2Msgs = await msgService.getMessages(userId: 'pat-unknown-999');
+      expect(user2Msgs.isEmpty, isTrue);
+    });
+
+    test('MessageService isolates clinical alerts per user', () async {
+      final msgService = MessageService();
+
+      final user1Alerts = await msgService.getAlerts(userId: 'pat-001');
+      expect(user1Alerts.isNotEmpty, isTrue);
+
+      final otherUserAlerts = await msgService.getAlerts(userId: 'pat-isolated-user');
+      // L'utilisateur isolé ne reçoit pas les alertes privées de pat-001
+      expect(otherUserAlerts.any((a) => a.recipientUserId == 'pat-001'), isFalse);
     });
   });
 }

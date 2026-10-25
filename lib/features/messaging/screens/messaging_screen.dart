@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../models/message.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../services/message_service.dart';
 
 class MessagingScreen extends StatefulWidget {
@@ -31,8 +33,22 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final msgs = await _messageService.getMessages();
-    final alrts = await _messageService.getAlerts();
+    final user = context.read<AuthProvider>().user;
+    final isDoctor = user?.roles.any(
+          (r) =>
+              r.toUpperCase().contains('DOCTOR') ||
+              r.toUpperCase().contains('PRATICIEN') ||
+              r.toUpperCase().contains('MEDECIN'),
+        ) ??
+        false;
+    final userId = user?.id.isNotEmpty == true ? user!.id : 'pat-001';
+
+    final msgs = await _messageService.getMessages(
+      userId: userId,
+      isDoctor: isDoctor,
+    );
+    final alrts = await _messageService.getAlerts(userId: userId);
+
     if (mounted) {
       setState(() {
         _messages = msgs;
@@ -46,40 +62,69 @@ class _MessagingScreenState extends State<MessagingScreen> {
     final text = _messageInputController.text.trim();
     if (text.isEmpty) return;
 
+    final user = context.read<AuthProvider>().user;
+    final isDoctor = user?.roles.any(
+          (r) =>
+              r.toUpperCase().contains('DOCTOR') ||
+              r.toUpperCase().contains('PRATICIEN') ||
+              r.toUpperCase().contains('MEDECIN'),
+        ) ??
+        false;
+    final userId = user?.id.isNotEmpty == true ? user!.id : 'pat-001';
+    final userName = user?.displayName.isNotEmpty == true
+        ? user!.displayName
+        : (user?.username.isNotEmpty == true ? user!.username : (isDoctor ? 'Dr. Praticien' : 'Patient'));
+
     _messageInputController.clear();
+
     final newMsg = await _messageService.sendMessage({
       'content': text,
-      'senderName': 'Vous (Patient)',
-      'senderRole': 'PATIENT',
-      'recipientName': 'Dr. Amadou Ouédraogo',
-      'recipientRole': 'DOCTOR',
+      'senderId': userId,
+      'senderName': isDoctor ? 'Dr. $userName' : userName,
+      'senderRole': isDoctor ? 'DOCTOR' : 'PATIENT',
+      'recipientId': isDoctor ? 'pat-001' : 'doc-001',
+      'recipientName': isDoctor ? 'M. Kaboré Souleymane' : 'Dr. Amadou Ouédraogo',
+      'recipientRole': isDoctor ? 'PATIENT' : 'DOCTOR',
+      'patientId': isDoctor ? 'pat-001' : userId,
+      'conversationId': 'conv-$userId',
     });
 
-    setState(() {
-      _messages.add(newMsg);
-    });
+    if (mounted) {
+      setState(() {
+        _messages.add(newMsg);
+      });
 
-    // Auto-scroll to bottom
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+      // Auto-scroll to bottom
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final isDoctor = user?.roles.any(
+          (r) =>
+              r.toUpperCase().contains('DOCTOR') ||
+              r.toUpperCase().contains('PRATICIEN') ||
+              r.toUpperCase().contains('MEDECIN'),
+        ) ??
+        false;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
         title: Text(
-          'Messagerie & Alertes Cliniques',
+          isDoctor ? 'Messagerie Clinique (Praticien)' : 'Messagerie & Alertes',
           style: AppTextStyles.headingMedium.copyWith(color: AppColors.textPrimary),
         ),
         actions: [
@@ -108,10 +153,18 @@ class _MessagingScreenState extends State<MessagingScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: _buildTabButton(0, 'Médecin Traitant', Icons.chat_bubble_outline),
+                        child: _buildTabButton(
+                          0,
+                          isDoctor ? 'Patient Suivi' : 'Médecin Traitant',
+                          Icons.chat_bubble_outline,
+                        ),
                       ),
                       Expanded(
-                        child: _buildTabButton(1, 'Alertes Labo (${_alerts.where((a) => !a.isRead).length})', Icons.notifications_active_outlined),
+                        child: _buildTabButton(
+                          1,
+                          'Alertes (${_alerts.where((a) => !a.isRead).length})',
+                          Icons.notifications_active_outlined,
+                        ),
                       ),
                     ],
                   ),
@@ -123,7 +176,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _activeTab == 0
-                        ? _buildChatView()
+                        ? _buildChatView(isDoctor)
                         : _buildAlertsView(),
               ),
             ],
@@ -175,10 +228,10 @@ class _MessagingScreenState extends State<MessagingScreen> {
     );
   }
 
-  Widget _buildChatView() {
+  Widget _buildChatView(bool isDoctor) {
     return Column(
       children: [
-        // En-tête médecin en ligne
+        // En-tête de session isolée
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           color: AppColors.softBlue,
@@ -187,23 +240,29 @@ class _MessagingScreenState extends State<MessagingScreen> {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: AppColors.primary,
-                child: const Icon(Icons.person, color: Colors.white, size: 20),
+                child: Icon(
+                  isDoctor ? Icons.person_outline : Icons.local_hospital_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Dr. Amadou Ouédraogo (Cardiologue)',
-                      style: TextStyle(
+                      isDoctor
+                          ? 'Dossier Patient : M. Kaboré Souleymane'
+                          : 'Dr. Amadou Ouédraogo (Cardiologue référant)',
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    Text(
-                      'En ligne • Échange chiffré et sécurisé HDS',
+                    const Text(
+                      'Canal sécurisé • Discussion isolée et chiffrée HDS',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.accentGreen,
@@ -214,6 +273,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
                 ),
               ),
               IconButton(
+                tooltip: 'Démarrer une téléconsultation isolée',
                 icon: const Icon(Icons.videocam_rounded, color: AppColors.primary),
                 onPressed: () {
                   context.push(AppRoutes.teleconsult);
@@ -223,18 +283,61 @@ class _MessagingScreenState extends State<MessagingScreen> {
           ),
         ),
 
-        // Fil de discussion
+        // Fil de discussion isolé
         Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: _messages.length,
-            itemBuilder: (context, index) {
-              final msg = _messages[index];
-              final isMe = msg.senderRole == 'PATIENT' || msg.senderId == 'current-user';
-              return _buildMessageBubble(msg, isMe);
-            },
-          ),
+          child: _messages.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(28.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: const BoxDecoration(
+                            color: AppColors.softBlue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.lock_rounded,
+                              size: 36, color: AppColors.primary),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Fil de Discussion Confidentiel & Isolé',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 15.5),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          isDoctor
+                              ? 'Aucun message dans ce fil. Les échanges entre praticien et patient sont confidentiels et strictement cloisonnés.'
+                              : 'Aucun message pour le moment. Vos discussions avec votre médecin sont strictement isolées de tout autre utilisateur.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12.5,
+                              height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = _messages[index];
+                    final user = context.read<AuthProvider>().user;
+                    final userId = user?.id ?? '';
+                    final isMe = msg.senderId == userId ||
+                        (isDoctor
+                            ? msg.senderRole == 'DOCTOR'
+                            : msg.senderRole == 'PATIENT' ||
+                                msg.senderId == 'current-user');
+                    return _buildMessageBubble(msg, isMe);
+                  },
+                ),
         ),
 
         // Barre d'envoi
@@ -256,7 +359,9 @@ class _MessagingScreenState extends State<MessagingScreen> {
                 child: TextField(
                   controller: _messageInputController,
                   decoration: InputDecoration(
-                    hintText: 'Écrire un message au médecin...',
+                    hintText: isDoctor
+                        ? 'Écrire une consigne médicale au patient...'
+                        : 'Écrire un message à votre médecin...',
                     filled: true,
                     fillColor: AppColors.background,
                     contentPadding: const EdgeInsets.symmetric(
@@ -316,12 +421,26 @@ class _MessagingScreenState extends State<MessagingScreen> {
         child: Column(
           crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
+            if (!isMe)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  msg.senderName,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
             if (msg.isUrgent)
               Container(
                 margin: const EdgeInsets.only(bottom: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isMe ? Colors.white.withValues(alpha: 0.20) : const Color(0xFFFEE2E2),
+                  color: isMe
+                      ? Colors.white.withValues(alpha: 0.20)
+                      : const Color(0xFFFEE2E2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -346,7 +465,9 @@ class _MessagingScreenState extends State<MessagingScreen> {
               '${msg.sentAt.hour.toString().padLeft(2, '0')}:${msg.sentAt.minute.toString().padLeft(2, '0')}',
               style: TextStyle(
                 fontSize: 10,
-                color: isMe ? Colors.white.withValues(alpha: 0.75) : AppColors.textSecondary,
+                color: isMe
+                    ? Colors.white.withValues(alpha: 0.75)
+                    : AppColors.textSecondary,
               ),
             ),
           ],
@@ -356,6 +477,18 @@ class _MessagingScreenState extends State<MessagingScreen> {
   }
 
   Widget _buildAlertsView() {
+    if (_alerts.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Text(
+            'Aucune alerte médicale pour le moment.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _alerts.length,
@@ -442,4 +575,3 @@ class _MessagingScreenState extends State<MessagingScreen> {
     );
   }
 }
-

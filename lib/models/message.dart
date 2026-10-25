@@ -87,6 +87,7 @@ class ClinicalAlert {
   final DateTime timestamp;
   final bool isRead;
   final String? actionRoute;
+  final String? recipientUserId;
 
   const ClinicalAlert({
     required this.id,
@@ -97,6 +98,7 @@ class ClinicalAlert {
     required this.timestamp,
     this.isRead = false,
     this.actionRoute,
+    this.recipientUserId,
   });
 
   factory ClinicalAlert.fromJson(Map<String, dynamic> json) {
@@ -109,6 +111,7 @@ class ClinicalAlert {
       timestamp: DateTime.tryParse(json['timestamp']?.toString() ?? '') ?? DateTime.now(),
       isRead: json['isRead'] as bool? ?? false,
       actionRoute: json['actionRoute'] as String?,
+      recipientUserId: json['recipientUserId'] as String?,
     );
   }
 
@@ -122,6 +125,7 @@ class ClinicalAlert {
       'timestamp': timestamp.toIso8601String(),
       'isRead': isRead,
       'actionRoute': actionRoute,
+      'recipientUserId': recipientUserId,
     };
   }
 }
