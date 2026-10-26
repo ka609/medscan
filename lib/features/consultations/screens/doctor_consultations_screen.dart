@@ -350,20 +350,26 @@ class _DoctorConsultationsScreenState extends State<DoctorConsultationsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: AppColors.softBlue,
-                        child: Icon(Icons.person, size: 16, color: AppColors.primary),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        c['patientName'],
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
-                      ),
-                    ],
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 16,
+                          backgroundColor: AppColors.softBlue,
+                          child: Icon(Icons.person, size: 16, color: AppColors.primary),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            c['patientName'],
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
@@ -399,12 +405,17 @@ class _DoctorConsultationsScreenState extends State<DoctorConsultationsScreen> {
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  spacing: 12,
+                  runSpacing: 6,
                   children: [
                     Text('TA : ${c['bloodPressure']}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
                     Text('Poids : ${c['weightKg']} kg', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
-                    Text('IMC : ${c['bmi']} (${c['bmiCategory']})', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF16A34A))),
+                    Text(
+                      'IMC : ${c['bmi']} (${c['bmiCategory']})',
+                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF16A34A)),
+                    ),
                   ],
                 ),
               ),
