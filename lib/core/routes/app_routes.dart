@@ -35,9 +35,11 @@ class AppRoutes {
   static const bookAppointment =
       '/appointments/book';
 
-  // Dossier médical
+  // Dossier médical & Consultations
   static const medicalRecord = '/medical-record';
   static const consultations = '/medical-record/consultations';
+  static const doctorConsultations = '/doctor/consultations';
+  static const labManagement = '/lab';
   static const examinations = '/medical-record/examinations';
   static const results = '/medical-record/results';
   static const medications = '/medical-record/medications';

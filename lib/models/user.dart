@@ -28,6 +28,8 @@ enum UserRole {
   patient('PATIENT', 'Patient'),
   doctor('DOCTOR', 'Médecin'),
   practitioner('PRATICIEN', 'Praticien'),
+  nurse('NURSE', 'Infirmier'),
+  labTech('LAB_TECH', 'Laborantin'),
   admin('ADMIN', 'Administrateur');
 
   final String code;
@@ -46,6 +48,7 @@ class User {
   final List<String> permissions;
   final String? position; // Poste médical / statut (Praticien, Médecin, Docteur, etc.)
   final String? specialty; // Spécialité médicale éventuelle
+  final String? departmentName; // Département médical d'appartenance
 
   const User({
     required this.id,
@@ -58,6 +61,7 @@ class User {
     required this.permissions,
     this.position,
     this.specialty,
+    this.departmentName,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -74,6 +78,7 @@ class User {
           json['medicalPosition'] as String? ??
           json['title'] as String?,
       specialty: json['specialty'] as String?,
+      departmentName: json['department'] as String? ?? json['departmentName'] as String?,
     );
   }
 
@@ -89,6 +94,7 @@ class User {
       'permissions': permissions,
       'position': position,
       'specialty': specialty,
+      'departmentName': departmentName,
     };
   }
 
@@ -121,16 +127,78 @@ class User {
     });
   }
 
-  /// Propriété modulaire indiquant si l'utilisateur est un patient
-  bool get isPatient => !isDoctor;
+  /// Propriété modulaire indiquant si l'utilisateur est un infirmier
+  bool get isNurse {
+    if (position != null && position!.trim().isNotEmpty) {
+      final p = position!.toLowerCase().trim();
+      if (p.contains('infirmier') || p.contains('infirmière') || p.contains('nurse')) {
+        return true;
+      }
+    }
+    return roles.any((r) {
+      final normalized = r.toUpperCase();
+      return normalized.contains('NURSE') || normalized.contains('INFIRMIER');
+    });
+  }
 
-  /// Libellé d'affichage professionnel (Ex: Dr. Traoré, Praticien Hospitalier)
+  /// Propriété modulaire indiquant si l'utilisateur est un personnel soignant (médecin ou infirmier)
+  bool get isHealthWorker => isDoctor || isNurse;
+
+  /// Propriété modulaire indiquant si l'utilisateur est un laborantin / technicien de labo
+  bool get isLabTech {
+    if (position != null && position!.trim().isNotEmpty) {
+      final p = position!.toLowerCase().trim();
+      if (p.contains('laborat') || p.contains('biologiste') || p.contains('technicien')) {
+        return true;
+      }
+    }
+    return roles.any((r) {
+      final normalized = r.toUpperCase();
+      return normalized.contains('LAB') ||
+          normalized.contains('LABORANTIN') ||
+          normalized.contains('TECHNICIAN');
+    });
+  }
+
+  /// Propriété modulaire indiquant si l'utilisateur est un patient
+  bool get isPatient => !isHealthWorker && !isLabTech;
+
+  /// Département de santé d'affectation
+  String get department {
+    if (departmentName != null && departmentName!.trim().isNotEmpty) {
+      return departmentName!;
+    }
+    if (specialty != null && specialty!.trim().isNotEmpty) {
+      return specialty!;
+    }
+    if (isDoctor) {
+      if (displayName.toLowerCase().contains('pediatr') || (position?.toLowerCase().contains('pediatr') ?? false)) {
+        return 'Pédiatrie';
+      }
+      return 'Médecine Générale';
+    }
+    if (isNurse) {
+      return 'Soins & Urgences';
+    }
+    if (isLabTech) {
+      return 'Laboratoire d\'analyses';
+    }
+    return 'Tous Départements';
+  }
+
+  /// Libellé d'affichage professionnel (Ex: Dr. Traoré, Infirmier Sawadogo, Tech. Sanou)
   String get displayTitle {
     if (position != null && position!.trim().isNotEmpty) {
       return '$position $displayName'.trim();
     }
     if (isDoctor) {
       return 'Dr. $displayName';
+    }
+    if (isNurse) {
+      return 'Inf. $displayName';
+    }
+    if (isLabTech) {
+      return 'Tech. $displayName';
     }
     return displayName;
   }
@@ -139,6 +207,10 @@ class User {
 /// Extension modulaire sur [User?] pour un accès direct et typé sans vérifications en dur répétées
 extension UserExtension on User? {
   bool get isDoctor => this?.isDoctor ?? false;
+  bool get isNurse => this?.isNurse ?? false;
+  bool get isHealthWorker => this?.isHealthWorker ?? false;
+  bool get isLabTech => this?.isLabTech ?? false;
   bool get isPatient => this?.isPatient ?? true;
+  String get department => this?.department ?? 'Tous Départements';
   String get displayTitle => this?.displayTitle ?? 'Utilisateur';
 }

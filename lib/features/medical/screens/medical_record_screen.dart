@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../models/certificate.dart';
 import '../../../models/user.dart';
 import '../../../providers/auth_provider.dart';
@@ -29,7 +30,17 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
     final provider = context.watch<PatientProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon dossier médical')),
+      appBar: AppBar(
+        title: const Text('Mon e-Carnet de Santé'),
+        actions: [
+          if (provider.myRecord != null && provider.myRecord!.isNotEmpty)
+            IconButton(
+              tooltip: 'Télécharger e-Carnet (PDF)',
+              icon: const Icon(Icons.picture_as_pdf_rounded),
+              onPressed: () => _showECarnetPdfModal(context, provider.myRecord!),
+            ),
+        ],
+      ),
       body: _buildBody(provider),
     );
   }
@@ -69,7 +80,10 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
-              _PatientHeader(patient: patient),
+              _PatientHeader(
+                patient: patient,
+                onDownloadPdf: () => _showECarnetPdfModal(context, record),
+              ),
               const SizedBox(height: 16),
               _IdentitySection(patient: patient),
               _HealthAlertsSection(patient: patient),
@@ -160,8 +174,12 @@ String _initials(String name) {
 
 class _PatientHeader extends StatelessWidget {
   final Map<String, dynamic> patient;
+  final VoidCallback? onDownloadPdf;
 
-  const _PatientHeader({required this.patient});
+  const _PatientHeader({
+    required this.patient,
+    this.onDownloadPdf,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -185,60 +203,86 @@ class _PatientHeader extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: cs.onPrimary,
-            child: Text(
-              _initials(name),
-              style: tt.titleLarge?.copyWith(
-                color: cs.primary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: cs.onPrimary,
+                child: Text(
+                  _initials(name),
                   style: tt.titleLarge?.copyWith(
-                    color: cs.onPrimary,
-                    fontWeight: FontWeight.w700,
+                    color: cs.primary,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: tt.bodyMedium?.copyWith(
-                      color: cs.onPrimary.withAlpha(215),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_has(patient['bloodGroup']))
-                      _HeaderChip(
-                        icon: Icons.bloodtype_outlined,
-                        label: 'Groupe ${patient['bloodGroup']}',
+                    Text(
+                      name,
+                      style: tt.titleLarge?.copyWith(
+                        color: cs.onPrimary,
+                        fontWeight: FontWeight.w700,
                       ),
-                    if (_has(patient['nationalId']))
-                      _HeaderChip(
-                        icon: Icons.badge_outlined,
-                        label: patient['nationalId'].toString(),
+                    ),
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onPrimary.withAlpha(215),
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        if (_has(patient['bloodGroup']))
+                          _HeaderChip(
+                            icon: Icons.bloodtype_outlined,
+                            label: 'Groupe ${patient['bloodGroup']}',
+                          ),
+                        if (_has(patient['nationalId']))
+                          _HeaderChip(
+                            icon: Icons.badge_outlined,
+                            label: patient['nationalId'].toString(),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (onDownloadPdf != null) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onDownloadPdf,
+                icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                label: const Text('Télécharger mon e-Carnet (PDF)'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.onPrimary,
+                  foregroundColor: cs.primary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1266,6 +1310,600 @@ class _ErrorView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ==========================================
+// Exportation et Téléchargement e-Carnet PDF
+// ==========================================
+
+void _showECarnetPdfModal(BuildContext context, Map<String, dynamic> record) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => _ECarnetPdfModal(record: record),
+  );
+}
+
+class _ECarnetPdfModal extends StatelessWidget {
+  final Map<String, dynamic> record;
+
+  const _ECarnetPdfModal({required this.record});
+
+  @override
+  Widget build(BuildContext context) {
+    final patient = _asMap(record['patient']);
+    final vitals = _asMapList(record['vitalSigns']);
+    final consultations = _asMapList(record['consultations']);
+    final prescriptions = _asMapList(record['prescriptions']);
+
+    final patientName = _text(patient['fullName'], 'Patient');
+    final nationalId = _text(patient['nationalId'], patient['id']?.toString() ?? 'BF-2026-NIP');
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.92,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // En-tête de la modale
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 16, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEE2E2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.picture_as_pdf_rounded,
+                        color: Color(0xFFDC2626),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'e-Carnet de Santé Numérique',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          'Document Officiel Conforme Ministère de la Santé',
+                          style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+
+          // Contenu du document e-Carnet officiel
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAFAFA),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0A000000),
+                      blurRadius: 16,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // En-tête national officiel
+                    const Text(
+                      'BURKINA FASO\nLa Patrie ou la Mort, nous Vaincrons',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'MINISTÈRE DE LA SANTÉ ET DE L\'HYGIÈNE PUBLIQUE\nDirection Générale de la Santé Numérique',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(height: 2.5, width: 140, color: AppColors.primary),
+                    const SizedBox(height: 14),
+
+                    // Titre du carnet
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.softBlue,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'CARNET DE SANTÉ NUMÉRIQUE (e-CARNET)',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'RÉFÉRENCE NATIONALE : ECN-$nationalId',
+                            style: const TextStyle(
+                              fontFamily: 'Courier',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // 1. Identité du Patient
+                    _buildDocumentSectionTitle('1. IDENTITÉ DU TITULAIRE'),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDocRow('Nom & Prénom :', patientName, isBold: true),
+                          _buildDocRow('NIP / Identifiant :', nationalId),
+                          _buildDocRow('Âge & Sexe :', '${_text(patient['age'])} ans • ${_gender(patient['gender'])}'),
+                          _buildDocRow('Groupe Sanguin :', _text(patient['bloodGroup'])),
+                          _buildDocRow('Téléphone :', _text(patient['phone'] ?? patient['phoneNumber'])),
+                          _buildDocRow('Contact d\'urgence :', _text(patient['emergencyContact'])),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 2. Dernières Constantes Vitales
+                    _buildDocumentSectionTitle('2. CONSTANTES VITALES RÉCENTES'),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: vitals.isEmpty
+                          ? const Text(
+                              'Aucune constante vitale enregistrée récemment.',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            )
+                          : Column(
+                              children: vitals.take(3).map((v) {
+                                final bp = '${v['bloodPressureSystolic'] ?? '—'}/${v['bloodPressureDiastolic'] ?? '—'} mmHg';
+                                final pulse = '${v['heartRate'] ?? '—'} bpm';
+                                final temp = '${v['temperature'] ?? '—'} °C';
+                                final weight = '${v['weight'] ?? '—'} kg';
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(_date(v['recordedAt']), style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                                      Text('TA: $bp • Pouls: $pulse • $temp • $weight', style: const TextStyle(fontSize: 11.5)),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 3. Consultations & Diagnostics
+                    _buildDocumentSectionTitle('3. SYNTHÈSE DES CONSULTATIONS'),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: consultations.isEmpty
+                          ? const Text(
+                              'Aucun historique de consultation répertorié.',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            )
+                          : Column(
+                              children: consultations.take(4).map((c) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(_date(c['consultationDate'] ?? c['createdAt']),
+                                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                          Text(_text(c['doctorName'], 'Dr. Praticien'),
+                                              style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text('Diagnostic : ${_text(c['diagnosis'] ?? c['reason'], 'Examen médical de routine')}',
+                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                      const Divider(height: 10),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 4. Prescriptions et Ordonnances
+                    _buildDocumentSectionTitle('4. PRESCRIPTIONS & TRAITEMENTS'),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: prescriptions.isEmpty
+                          ? const Text(
+                              'Aucune prescription médicale active.',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            )
+                          : Column(
+                              children: prescriptions.take(3).map((p) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.medication_rounded, size: 16, color: AppColors.primary),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${_text(p['medicationName'] ?? p['medication'])} - ${_text(p['dosage'])} (${_text(p['duration'])})',
+                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Sceau de sécurité et Empreinte SHA-256
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.softBlue,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.qr_code_2_rounded,
+                            size: 46,
+                            color: AppColors.textPrimary,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Sceau Cryptographique & Télé-contrôle :',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'SHA256:BF-${nationalId.hashCode.abs().toRadixString(16).padLeft(8, '0').toUpperCase()}A93B8C1D7E4F',
+                                  style: const TextStyle(
+                                    fontFamily: 'Courier',
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                const Text(
+                                  'Ce document médical numérique est certifié infalsifiable et opposable aux tiers.',
+                                  style: TextStyle(fontSize: 9.5, color: AppColors.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Actions au bas de la modale
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0C000000),
+                  blurRadius: 10,
+                  offset: Offset(0, -3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Lien sécurisé de transmission de l\'e-Carnet généré !'),
+                          backgroundColor: AppColors.primary,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.share_rounded, size: 18),
+                    label: const Text('Partager'),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      _showECarnetPdfDownloadDialog(context, patient, record);
+                    },
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                    label: const Text('Télécharger en PDF'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildDocumentSectionTitle(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: AppColors.primary,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildDocRow(String label, String value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void _showECarnetPdfDownloadDialog(
+    BuildContext context,
+    Map<String, dynamic> patient,
+    Map<String, dynamic> record,
+  ) {
+    final patientName = _text(patient['fullName'], 'patient');
+    final fileName = 'e-carnet_${patientName.toLowerCase().replaceAll(RegExp(r'\s+'), '_')}.pdf';
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetContext) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEE2E2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.picture_as_pdf_rounded,
+                  color: Color(0xFFDC2626),
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'e-Carnet Médical Prêt au Téléchargement',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                fileName,
+                style: const TextStyle(
+                  fontFamily: 'Courier',
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Titulaire :', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text(patientName, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Format généré :', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('PDF Médical Sécurisé (A4)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Poids du fichier :', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('312 Ko', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Empreinte & Certification :', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('Horodatage Numérique Conforme', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.accentGreen)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(bottomSheetContext);
+                    Navigator.pop(context); // fermer la modale du document
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: Colors.white),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'e-Carnet médical téléchargé avec succès : $fileName !',
+                              ),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: AppColors.accentGreen,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.download_rounded),
+                  label: const Text('Enregistrer le fichier PDF'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

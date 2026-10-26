@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../models/referral.dart';
+import '../../../models/user.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../services/referral_service.dart';
 
 class ReferralsScreen extends StatefulWidget {
@@ -42,9 +45,10 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
     return _referrals.where((r) => r.status == _selectedFilter).toList();
   }
 
-  void _showNewReferralDialog() {
+  void _showNewReferralDialog({User? user}) {
     final targetHospitalController = TextEditingController(text: 'CHU de Tengandogo');
     final targetServiceController = TextEditingController(text: 'Service de Neurologie & IRM');
+    final patientNameController = TextEditingController();
     final reasonController = TextEditingController();
     final summaryController = TextEditingController();
     String priority = 'URGENT';
@@ -58,15 +62,49 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: const Text(
-                'Initier une orientation médicale',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCCFBF1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.share_location_rounded, color: Color(0xFF0D9488), size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Initier une orientation médicale',
+                      style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
               ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'Patient concerné (Nom / NIP)',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: patientNameController,
+                      decoration: InputDecoration(
+                        hintText: 'Ex: Traoré Aminata (NIP-BF-2026)',
+                        prefixIcon: const Icon(Icons.person_outline_rounded, color: Color(0xFF0D9488)),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     const Text(
                       'Établissement destinataire',
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
@@ -75,6 +113,7 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
                     TextField(
                       controller: targetHospitalController,
                       decoration: InputDecoration(
+                        hintText: 'Ex: CHU de Tengandogo, CHU de Bogodogo...',
                         filled: true,
                         fillColor: AppColors.background,
                         border: OutlineInputBorder(
@@ -139,7 +178,7 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
                     TextField(
                       controller: reasonController,
                       decoration: InputDecoration(
-                        labelText: 'Motif de redirection',
+                        labelText: 'Motif de redirection médicale',
                         hintText: 'Ex: Exploration diagnostique spécialisée',
                         filled: true,
                         fillColor: AppColors.background,
@@ -153,8 +192,8 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
                       controller: summaryController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        labelText: 'Résumé clinique & antécédents',
-                        hintText: 'Ex: Traitement en cours, constantes et bilans récents...',
+                        labelText: 'Résumé clinique, constantes & antécédents',
+                        hintText: 'Informations médicales complètes transmises pour assister l\'autre centre...',
                         filled: true,
                         fillColor: AppColors.background,
                         border: OutlineInputBorder(
@@ -175,32 +214,40 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
                     final nav = Navigator.of(context);
                     final messenger = ScaffoldMessenger.of(context);
                     nav.pop();
+
+                    final doctorName = user?.displayTitle ??
+                        (user?.displayName.isNotEmpty == true ? user!.displayName : 'Dr. Praticien');
+                    final hospitalName = user?.departmentName ?? 'CHU Yalgado Ouédraogo';
+                    final targetPatient = patientNameController.text.trim().isEmpty
+                        ? 'Patient orienté'
+                        : patientNameController.text.trim();
+
                     final ref = await _referralService.createReferral({
                       'targetTenantName': targetHospitalController.text.trim(),
                       'targetService': targetServiceController.text.trim(),
                       'priority': priority,
                       'clinicalReason': reasonController.text.trim().isEmpty
-                          ? 'Transfert médical spécialisé'
+                          ? 'Transfert médical spécialisé pour $targetPatient'
                           : reasonController.text.trim(),
                       'medicalSummary': summaryController.text.trim().isEmpty
-                          ? 'Dossier clinique transmis électroniquement.'
-                          : summaryController.text.trim(),
-                      'sourceTenantName': 'CHU Yalgado Ouédraogo',
-                      'referringDoctorName': 'Dr. Amadou Ouédraogo',
+                          ? 'Dossier clinique et constantes de $targetPatient transmis électroniquement.'
+                          : 'Patient: $targetPatient. ${summaryController.text.trim()}',
+                      'sourceTenantName': hospitalName,
+                      'referringDoctorName': doctorName,
                     });
                     if (!mounted) return;
                     setState(() {
                       _referrals.insert(0, ref);
                     });
                     messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Orientation médicale transmise avec succès !'),
+                      SnackBar(
+                        content: Text('Orientation médicale de $targetPatient transmise avec succès !'),
                         backgroundColor: AppColors.accentGreen,
                       ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: const Color(0xFF0D9488),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -339,13 +386,16 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final isHealthWorker = user.isHealthWorker;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
         title: Text(
-          'Orientations & Redirections',
+          isHealthWorker ? 'Orientations & Transferts (Soignant)' : 'Mes Orientations Médicales',
           style: AppTextStyles.headingMedium.copyWith(color: AppColors.textPrimary),
         ),
         actions: [
@@ -355,15 +405,17 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showNewReferralDialog,
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.share_location_rounded, color: Colors.white),
-        label: const Text(
-          'Nouvelle orientation',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      ),
+      floatingActionButton: isHealthWorker
+          ? FloatingActionButton.extended(
+              onPressed: () => _showNewReferralDialog(user: user),
+              backgroundColor: const Color(0xFF0D9488),
+              icon: const Icon(Icons.share_location_rounded, color: Colors.white),
+              label: const Text(
+                'Nouvelle orientation',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            )
+          : null,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
@@ -388,6 +440,30 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
                   ),
                 ),
               ),
+
+              // Note explicative pour le patient
+              if (!isHealthWorker)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.softBlue,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.shield_outlined, color: AppColors.primary, size: 20),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Seul le personnel de santé habilité peut initier une orientation vers un autre centre de santé avec transmission de votre dossier médical. Retrouvez ici vos fiches de liaison.',
+                          style: TextStyle(fontSize: 12, color: AppColors.textPrimary, height: 1.3),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               // 2. Bannière de continuité des soins
               Container(
@@ -454,10 +530,12 @@ class _ReferralsScreenState extends State<ReferralsScreen> {
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _filteredReferrals.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text(
-                              'Aucune orientation enregistrée.',
-                              style: TextStyle(color: AppColors.textSecondary),
+                              isHealthWorker
+                                  ? 'Aucune orientation enregistrée.'
+                                  : 'Aucune orientation vers un autre centre de santé pour le moment.',
+                              style: const TextStyle(color: AppColors.textSecondary),
                             ),
                           )
                         : RefreshIndicator(

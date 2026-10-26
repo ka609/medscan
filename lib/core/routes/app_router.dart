@@ -13,9 +13,11 @@ import '../../features/medical/screens/prescription_screen.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
 import '../../features/appointments/screens/book_appointment_screen.dart';
 import '../../features/certificates/screens/certificates_screen.dart';
-import '../../features/referrals/screens/referrals_screen.dart';
+import '../../features/consultations/screens/doctor_consultations_screen.dart';
 import '../../features/grievances/screens/grievances_screen.dart';
+import '../../features/lab/screens/lab_management_screen.dart';
 import '../../features/messaging/screens/messaging_screen.dart';
+import '../../features/referrals/screens/referrals_screen.dart';
 import '../../features/teleconsult/screens/teleconsult_screen.dart';
 
 class AppRoutes {
@@ -32,6 +34,8 @@ class AppRoutes {
   static const String home = '/home';
   static const String profile = '/profile';
   static const String medicalRecord = '/medical-record';
+  static const String doctorConsultations = '/doctor/consultations';
+  static const String labManagement = '/lab';
   static const String prescriptions = '/prescriptions';
   static const String appointments = '/appointments';
   static const String bookAppointment = '/appointments/book';
@@ -117,6 +121,22 @@ final GoRouter appRouter = GoRouter(
       name: 'medical-record',
       builder: (context, state) {
         return const MedicalRecordScreen();
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.doctorConsultations,
+      name: 'doctor-consultations',
+      builder: (context, state) {
+        return const DoctorConsultationsScreen();
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.labManagement,
+      name: 'lab-management',
+      builder: (context, state) {
+        return const LabManagementScreen();
       },
     ),
 

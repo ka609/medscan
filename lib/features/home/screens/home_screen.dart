@@ -49,10 +49,183 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
+    final isHealthWorker = user.isHealthWorker;
+    final isLabTech = user.isLabTech;
+    final isDoctor = user.isDoctor;
+    final userDept = user.department;
+
     final userName = user?.displayName.isNotEmpty == true
         ? user!.displayName
         : (user?.username ?? 'Patient');
-    final userRole = user?.position ?? (user.isDoctor ? 'Médecin' : 'Patient');
+    final userRole = user?.position ?? (isDoctor ? 'Médecin' : (user.isNurse ? 'Infirmier' : (isLabTech ? 'Laborantin' : 'Patient')));
+
+    // Construction dynamique de la grille des services selon le rôle
+    List<ServiceItemData> services;
+    if (isHealthWorker) {
+      services = [
+        ServiceItemData(
+          icon: Icons.history_edu_rounded,
+          title: 'Consultations',
+          badgeText: 'Rédiger / Actes',
+          color: AppColors.primary,
+          backgroundColor: AppColors.softBlue,
+          onTap: () => context.push(AppRoutes.doctorConsultations),
+        ),
+        ServiceItemData(
+          icon: Icons.calendar_month_outlined,
+          title: 'Rendez-vous',
+          badgeText: 'Planning',
+          color: AppColors.primary,
+          backgroundColor: AppColors.softBlue,
+          onTap: () => context.push(AppRoutes.appointments),
+        ),
+        ServiceItemData(
+          icon: Icons.videocam_outlined,
+          title: 'Téléconsult',
+          badgeText: 'Jitsi',
+          color: AppColors.accentGreen,
+          backgroundColor: AppColors.softGreen,
+          onTap: () => context.push(AppRoutes.teleconsult),
+        ),
+        ServiceItemData(
+          icon: Icons.swap_horiz_rounded,
+          title: 'Orientations',
+          badgeText: 'Transfert',
+          color: const Color(0xFF0D9488),
+          backgroundColor: const Color(0xFFCCFBF1),
+          onTap: () => context.push(AppRoutes.referrals),
+        ),
+        ServiceItemData(
+          icon: Icons.verified_outlined,
+          title: 'Certificats',
+          badgeText: 'Émettre',
+          color: AppColors.primary,
+          backgroundColor: AppColors.softBlue,
+          onTap: () => context.push(AppRoutes.certificates),
+        ),
+        ServiceItemData(
+          icon: Icons.science_outlined,
+          title: 'Laboratoire',
+          badgeText: 'Biologie',
+          color: const Color(0xFF8B5CF6),
+          backgroundColor: const Color(0xFFF3E8FF),
+          onTap: () => context.push(AppRoutes.labManagement),
+        ),
+      ];
+    } else if (isLabTech) {
+      services = [
+        ServiceItemData(
+          icon: Icons.science_outlined,
+          title: 'Analyses Labo',
+          badgeText: 'Dossiers',
+          color: const Color(0xFF8B5CF6),
+          backgroundColor: const Color(0xFFF3E8FF),
+          onTap: () => context.push(AppRoutes.labManagement),
+        ),
+        ServiceItemData(
+          icon: Icons.send_rounded,
+          title: 'Transmettre',
+          badgeText: 'Dr & Patient',
+          color: const Color(0xFF16A34A),
+          backgroundColor: const Color(0xFFDCFCE7),
+          onTap: () => context.push(AppRoutes.labManagement),
+        ),
+        ServiceItemData(
+          icon: Icons.add_task_rounded,
+          title: 'Fixer RDV',
+          badgeText: 'Prélèvement',
+          color: AppColors.primary,
+          backgroundColor: AppColors.softBlue,
+          onTap: () => context.push(AppRoutes.labManagement),
+        ),
+        ServiceItemData(
+          icon: Icons.chat_bubble_outline_rounded,
+          title: 'Messagerie',
+          badgeText: 'Échanges',
+          color: AppColors.primary,
+          backgroundColor: AppColors.softBlue,
+          onTap: () => context.push(AppRoutes.messages),
+        ),
+        ServiceItemData(
+          icon: Icons.videocam_outlined,
+          title: 'Téléconsult',
+          badgeText: 'Jitsi',
+          color: AppColors.accentGreen,
+          backgroundColor: AppColors.softGreen,
+          onTap: () => context.push(AppRoutes.teleconsult),
+        ),
+        ServiceItemData(
+          icon: Icons.folder_shared_outlined,
+          title: 'Dossiers',
+          badgeText: 'Suivi',
+          color: AppColors.accentOrange,
+          backgroundColor: AppColors.softOrange,
+          onTap: () => context.push(AppRoutes.medicalRecord),
+        ),
+      ];
+    } else {
+      // Profil Patient
+      services = [
+        ServiceItemData(
+          icon: Icons.description_outlined,
+          title: 'Mon e-Carnet',
+          badgeText: 'PDF',
+          color: AppColors.primary,
+          backgroundColor: AppColors.softBlue,
+          onTap: () => context.push(AppRoutes.medicalRecord),
+        ),
+        ServiceItemData(
+          icon: Icons.calendar_month_outlined,
+          title: 'Prendre RDV',
+          badgeText: 'Départements',
+          color: AppColors.primary,
+          backgroundColor: AppColors.softBlue,
+          onTap: () => context.push(AppRoutes.bookAppointment),
+        ),
+        ServiceItemData(
+          icon: Icons.videocam_outlined,
+          title: 'Téléconsult',
+          badgeText: 'Jitsi',
+          color: AppColors.accentGreen,
+          backgroundColor: AppColors.softGreen,
+          onTap: () => context.push(AppRoutes.teleconsult),
+        ),
+        ServiceItemData(
+          icon: Icons.medication_outlined,
+          title: 'Pharmacie',
+          badgeText: 'Ordonnances',
+          color: AppColors.accentOrange,
+          backgroundColor: AppColors.softOrange,
+          onTap: () => context.push(AppRoutes.prescriptions),
+        ),
+        ServiceItemData(
+          icon: Icons.swap_horiz_rounded,
+          title: 'Orientations',
+          badgeText: 'Transfert',
+          color: const Color(0xFF0D9488),
+          backgroundColor: const Color(0xFFCCFBF1),
+          onTap: () => context.push(AppRoutes.referrals),
+        ),
+        ServiceItemData(
+          icon: Icons.verified_outlined,
+          title: 'Certificats',
+          badgeText: 'Télécharger',
+          color: AppColors.primary,
+          backgroundColor: AppColors.softBlue,
+          onTap: () => context.push(AppRoutes.certificates),
+        ),
+      ];
+    }
+
+    void onDepartmentTapped(String deptName) {
+      if (isHealthWorker) {
+        // Le docteur / infirmier accède à la liste de ses rendez-vous dans ce département et peut agir dessus
+        context.push(AppRoutes.appointments);
+      } else {
+        // Le patient choisit le département pour prendre rendez-vous
+        context.push(AppRoutes.bookAppointment);
+      }
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -75,80 +248,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       context.push(AppRoutes.profile);
                     },
                     onSearchTap: () {
-                      context.push(AppRoutes.bookAppointment);
+                      if (isHealthWorker) {
+                        context.push(AppRoutes.appointments);
+                      } else {
+                        context.push(AppRoutes.bookAppointment);
+                      }
                     },
                     onNotificationTap: () {
                       context.push(AppRoutes.messages);
                     },
                   ),
 
-                  // 2. Grille des 6 services clés identique à l'écran 1 de la maquette
+                  // 2. Grille des 6 services clés adaptée selon le rôle
                   Transform.translate(
                     offset: const Offset(0, -22),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: ServicesCard(
-                        services: [
-                          ServiceItemData(
-                            icon: Icons.monitor_weight_outlined,
-                            title: 'Consultation',
-                            badgeText: 'IMC',
-                            color: AppColors.primary,
-                            backgroundColor: AppColors.softBlue,
-                            onTap: () {
-                              context.push(AppRoutes.medicalRecord);
-                            },
-                          ),
-                          ServiceItemData(
-                            icon: Icons.calendar_month_outlined,
-                            title: 'Rendez-vous',
-                            color: AppColors.primary,
-                            backgroundColor: AppColors.softBlue,
-                            onTap: () {
-                              context.push(AppRoutes.bookAppointment);
-                            },
-                          ),
-                          ServiceItemData(
-                            icon: Icons.videocam_outlined,
-                            title: 'Téléconsult',
-                            badgeText: 'Jitsi',
-                            color: AppColors.accentGreen,
-                            backgroundColor: AppColors.softGreen,
-                            onTap: () {
-                              context.push(AppRoutes.teleconsult);
-                            },
-                          ),
-                          ServiceItemData(
-                            icon: Icons.medication_outlined,
-                            title: 'Pharmacie',
-                            color: AppColors.accentOrange,
-                            backgroundColor: AppColors.softOrange,
-                            onTap: () {
-                              context.push(AppRoutes.prescriptions);
-                            },
-                          ),
-                          ServiceItemData(
-                            icon: Icons.swap_horiz_rounded,
-                            title: 'Orientations',
-                            badgeText: 'Transfert',
-                            color: const Color(0xFF0D9488),
-                            backgroundColor: const Color(0xFFCCFBF1),
-                            onTap: () {
-                              context.push(AppRoutes.referrals);
-                            },
-                          ),
-                          ServiceItemData(
-                            icon: Icons.verified_outlined,
-                            title: 'Certificats',
-                            badgeText: 'Cachet',
-                            color: AppColors.primary,
-                            backgroundColor: AppColors.softBlue,
-                            onTap: () {
-                              context.push(AppRoutes.certificates);
-                            },
-                          ),
-                        ],
-                      ),
+                      child: ServicesCard(services: services),
                     ),
                   ),
 
@@ -156,10 +272,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 2, 20, 14),
                     child: SectionHeader(
-                      title: 'Départements',
-                      actionText: 'Voir tout',
+                      title: isHealthWorker ? 'Départements (Mon affectation : $userDept)' : 'Départements de Santé',
+                      actionText: isHealthWorker ? 'Gérer RDV' : 'Prendre RDV',
                       onActionTap: () {
-                        context.push(AppRoutes.bookAppointment);
+                        if (isHealthWorker) {
+                          context.push(AppRoutes.appointments);
+                        } else {
+                          context.push(AppRoutes.bookAppointment);
+                        }
                       },
                     ),
                   ),
@@ -178,9 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.medical_services_rounded,
                           color: AppColors.primary,
                           backgroundColor: AppColors.softBlue,
-                          onTap: () {
-                            context.push(AppRoutes.bookAppointment);
-                          },
+                          onTap: () => onDepartmentTapped('Médecine Générale'),
                         ),
                         const SizedBox(width: 12),
                         DepartmentCard(
@@ -189,9 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.child_care_rounded,
                           color: AppColors.accentRed,
                           backgroundColor: AppColors.softRed,
-                          onTap: () {
-                            context.push(AppRoutes.bookAppointment);
-                          },
+                          onTap: () => onDepartmentTapped('Pédiatrie'),
                         ),
                         const SizedBox(width: 12),
                         DepartmentCard(
@@ -200,9 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.favorite_rounded,
                           color: AppColors.accentPink,
                           backgroundColor: AppColors.softPink,
-                          onTap: () {
-                            context.push(AppRoutes.bookAppointment);
-                          },
+                          onTap: () => onDepartmentTapped('Cardiologie'),
                         ),
                         const SizedBox(width: 12),
                         DepartmentCard(
@@ -211,9 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.document_scanner_rounded,
                           color: AppColors.accentPurple,
                           backgroundColor: AppColors.softPurple,
-                          onTap: () {
-                            context.push(AppRoutes.bookAppointment);
-                          },
+                          onTap: () => onDepartmentTapped('Radiologie & IA'),
                         ),
                       ],
                     ),
