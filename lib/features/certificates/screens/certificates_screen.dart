@@ -674,22 +674,26 @@ class CertificateCardWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: badgeBg,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    cert.typeLabel,
-                    style: TextStyle(
-                      color: badgeColor,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      cert.typeLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: badgeColor,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Text(
                   cert.certificateNumber,
                   style: const TextStyle(
@@ -719,15 +723,19 @@ class CertificateCardWidget extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  'Du ${_formatDate(cert.startDate)} au ${_formatDate(cert.endDate)}',
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Text(
+                    'Du ${_formatDate(cert.startDate)} au ${_formatDate(cert.endDate)}',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Text(
                   '${cert.restDurationDays} jour(s) de repos',
                   style: const TextStyle(
@@ -761,7 +769,11 @@ class CertificateCardWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            Row(
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -770,6 +782,7 @@ class CertificateCardWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.check_circle_rounded,
                           size: 12, color: AppColors.accentGreen),
@@ -785,7 +798,6 @@ class CertificateCardWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Spacer(),
                 ElevatedButton.icon(
                   onPressed: onViewOfficialDoc,
                   icon: Icon(
@@ -799,6 +811,8 @@ class CertificateCardWidget extends StatelessWidget {
                     backgroundColor: AppColors.primaryContainer,
                     foregroundColor: AppColors.primary,
                     elevation: 0,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),

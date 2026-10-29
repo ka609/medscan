@@ -1,5 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:medscan/core/theme/app_theme.dart';
 import 'package:medscan/core/utils/id_generator.dart';
+import 'package:medscan/features/certificates/screens/certificates_screen.dart';
+import 'package:medscan/models/certificate.dart';
 import 'package:medscan/models/lab_order.dart';
 import 'package:medscan/models/message.dart';
 import 'package:medscan/models/user.dart';
@@ -222,6 +226,54 @@ void main() {
       );
 
       expect(alerts.any((a) => a.recipientUserId == patientId && a.message.contains(doctorName)), isTrue);
+    });
+  });
+
+  group('Rendu visuel et absence de débordement / contraintes infinies', () {
+    testWidgets('CertificateCardWidget se rend sans BoxConstraints infinies ni overflow', (tester) async {
+      final cert = MedicalCertificate(
+        id: 'cert-test-01',
+        certificateNumber: 'CERT-2026-0001',
+        type: 'SICK_LEAVE',
+        patientName: 'Sawadogo Mariam',
+        patientId: 'pat-001',
+        doctorName: 'Dr. Amadou Ouédraogo',
+        doctorId: 'doc-001',
+        tenantId: 'tenant-001',
+        hospitalName: 'CHU Yalgado Ouédraogo',
+        diagnosisOrReason: 'Repos médical strict justifié suite à asthénie fébrile aiguë',
+        restDurationDays: 5,
+        startDate: DateTime.now(),
+        endDate: DateTime.now().add(const Duration(days: 5)),
+        employerOrInstitution: 'Direction des Ressources Humaines',
+        allowPhysicalActivities: false,
+        status: 'VALIDATED',
+        digitalSealHash: 'SEAL-7F9B1E4C2A',
+        verificationUrl: 'https://medscan.gov.bf/verify/CERT-2026-0001',
+        createdAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 380,
+                child: CertificateCardWidget(
+                  cert: cert,
+                  isDoctor: false,
+                  onViewOfficialDoc: () {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Voir & Télécharger'), findsOneWidget);
+      expect(find.text('Cachet Officiel Scellé'), findsOneWidget);
     });
   });
 }
